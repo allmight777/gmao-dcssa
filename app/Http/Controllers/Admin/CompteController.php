@@ -116,38 +116,47 @@ class CompteController extends Controller
         return view('admin.comptes.edit', compact('compte', 'profils', 'services'));
     }
 
-    public function update(Request $request, Utilisateur $compte)
-    {
-        $validated = $request->validate([
-            'matricule' => 'required|unique:users,matricule,' . $compte->id . '|max:50',
-            'nom' => 'required|max:100',
-            'prenom' => 'required|max:100',
-            'grade' => 'nullable|max:50',
-            'fonction' => 'required|max:100',
-            'service_id' => 'nullable|exists:localisations,id',
-            'email' => 'required|email|unique:users,email,' . $compte->id . '|max:100',
-            'telephone' => 'nullable|max:20',
-            'login' => 'required|unique:users,login,' . $compte->id . '|max:50',
-            'profil_id' => 'required|exists:profils,id',
-            'statut' => 'required|in:actif,inactif,suspendu',
-        ]);
+public function update(Request $request, Utilisateur $compte)
+{
+    $validated = $request->validate([
+        'matricule' => 'required|unique:users,matricule,' . $compte->id . '|max:50',
+        'nom' => 'required|max:100',
+        'prenom' => 'required|max:100',
+        'grade' => 'nullable|max:50',
+        'fonction' => 'required|max:100',
+        'service_id' => 'nullable|exists:localisations,id',
+        'email' => 'required|email|unique:users,email,' . $compte->id . '|max:100',
+        'telephone' => 'nullable|max:20',
+        'login' => 'required|unique:users,login,' . $compte->id . '|max:50',
+        'profil_id' => 'required|exists:profils,id',
+        'statut' => 'required|in:actif,inactif,suspendu',
+        'new_password' => 'nullable|min:12|confirmed',
+    ]);
 
-        $compte->update($validated);
-
-        LogActivite::create([
-            'id_utilisateur' => auth()->id(),
-            'date_heure' => now(),
-            'action' => 'modification_compte',
-            'module' => 'administration',
-            'id_element' => $compte->id,
-            'adresse_ip' => $request->ip(),
-            'details' => "Modification du compte {$compte->nom} {$compte->prenom}",
-            'user_agent' => $request->userAgent(),
-        ]);
-
-        return redirect()->route('admin.comptes.index')
-            ->with('success', 'Compte mis à jour avec succès.');
+    // Si un nouveau mot de passe est fourni, le mettre à jour
+    if ($request->filled('new_password')) {
+        $validated['password'] = Hash::make($request->new_password);
     }
+
+    // Supprimer le champ temporaire du tableau de validation
+    unset($validated['new_password']);
+
+    $compte->update($validated);
+
+    LogActivite::create([
+        'id_utilisateur' => auth()->id(),
+        'date_heure' => now(),
+        'action' => 'modification_compte',
+        'module' => 'administration',
+        'id_element' => $compte->id,
+        'adresse_ip' => $request->ip(),
+        'details' => "Modification du compte {$compte->nom} {$compte->prenom}",
+        'user_agent' => $request->userAgent(),
+    ]);
+
+    return redirect()->route('admin.comptes.index')
+        ->with('success', 'Compte mis à jour avec succès.');
+}
 
     public function destroy(Request $request, Utilisateur $compte)
     {

@@ -2,6 +2,7 @@
 
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Admin\CompteController;
+use App\Http\Controllers\Admin\ServiceController;
 use App\Http\Controllers\Admin\ProfilController;
 use App\Http\Controllers\Auth\AuthenticatedSessionController;
 use App\Http\Controllers\Auth\RegisteredUserController;
@@ -67,6 +68,30 @@ Route::middleware('auth')->group(function () {
         Route::post('/profils/{profil}/permissions', [ProfilController::class, 'updatePermissions'])->name('profils.permissions.update');
         Route::post('/profils/{profil}/duplicate', [ProfilController::class, 'duplicate'])->name('profils.duplicate');
     });
+
+
+
+});
+
+
+    // Routes pour la gestion des services
+Route::prefix('admin/services')->name('admin.services.')->middleware(['auth'])->group(function () {
+    Route::get('/', [ServiceController::class, 'index'])->name('index');
+    Route::get('/create', [ServiceController::class, 'create'])->name('create');
+    Route::post('/', [ServiceController::class, 'store'])->name('store');
+    Route::get('/{service}', [ServiceController::class, 'show'])->name('show');
+    Route::get('/{service}/edit', [ServiceController::class, 'edit'])->name('edit');
+    Route::put('/{service}', [ServiceController::class, 'update'])->name('update');
+    Route::delete('/{service}', [ServiceController::class, 'destroy'])->name('destroy');
+    
+    // Gestion des utilisateurs
+    Route::get('/{service}/utilisateurs', [ServiceController::class, 'gestionUtilisateurs'])->name('gestion-utilisateurs');
+    Route::post('/{service}/utilisateurs', [ServiceController::class, 'ajouterUtilisateur'])->name('ajouter-utilisateur');
+    Route::delete('/{service}/utilisateurs/{utilisateur}', [ServiceController::class, 'retirerUtilisateur'])->name('retirer-utilisateur');
+    Route::put('/{service}/utilisateurs/{utilisateur}', [ServiceController::class, 'updateAffectation'])->name('update-affectation');
+    
+    // Export
+    Route::get('/export', [ServiceController::class, 'export'])->name('export');
 });
 
 // Redirection racine

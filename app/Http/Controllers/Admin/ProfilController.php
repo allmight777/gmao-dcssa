@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Profil;
 use App\Models\Permission;
+use App\Models\Utilisateur;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
@@ -13,20 +14,32 @@ class ProfilController extends Controller
     /**
      * UC-ADM-02 : Afficher la liste des profils
      */
-    public function index(Request $request)
-    {
-        $query = Profil::withCount('utilisateurs')
-            ->latest();
-        
-        if ($request->filled('search')) {
-            $query->where('nom_profil', 'like', '%' . $request->search . '%')
-                  ->orWhere('description', 'like', '%' . $request->search . '%');
-        }
-        
-        $profils = $query->paginate(15);
-        
-        return view('admin.profils.index', compact('profils'));
+ public function index(Request $request)
+{
+    $query = Profil::withCount(['utilisateurs', 'permissions'])
+        ->latest();
+    
+    if ($request->filled('search')) {
+        $query->where('nom_profil', 'like', '%' . $request->search . '%')
+              ->orWhere('description', 'like', '%' . $request->search . '%');
     }
+    
+    $profils = $query->paginate(15);
+    
+    // Statistiques globales
+    $totalProfils = Profil::count();
+    $totalUtilisateurs = Utilisateur::count();
+    $totalPermissions = Permission::count();
+    $profilParDefaut = Profil::where('is_default', true)->first();
+    
+    return view('admin.profils.index', compact(
+        'profils',
+        'totalProfils',
+        'totalUtilisateurs',
+        'totalPermissions',
+        'profilParDefaut'
+    ));
+}
 
     /**
      * UC-ADM-02 : Afficher le formulaire de création
@@ -47,8 +60,9 @@ class ProfilController extends Controller
             'nom_profil' => 'required|unique:profils|max:100',
             'description' => 'nullable|max:255',
             'permissions' => 'nullable|array',
-            'permissions.*.module' => 'required|string',
+            'permissions.*' => 'array',
             'permissions.*.actions' => 'required|array',
+            'permissions.*.actions.*' => 'string',
         ]);
         
         DB::beginTransaction();
@@ -62,13 +76,14 @@ class ProfilController extends Controller
             
             // Ajouter les permissions
             if (isset($validated['permissions'])) {
-                foreach ($validated['permissions'] as $permData) {
-                    $module = $permData['module'];
-                    foreach ($permData['actions'] as $action) {
-                        $profil->permissions()->create([
-                            'module' => $module,
-                            'action' => $action,
-                        ]);
+                foreach ($validated['permissions'] as $module => $permData) {
+                    if (isset($permData['actions']) && is_array($permData['actions'])) {
+                        foreach ($permData['actions'] as $action) {
+                            $profil->permissions()->create([
+                                'module' => $module,
+                                'action' => $action,
+                            ]);
+                        }
                     }
                 }
             }
@@ -102,18 +117,20 @@ class ProfilController extends Controller
     /**
      * UC-ADM-02 : Afficher les détails d'un profil
      */
-    public function show(Profil $profil)
-    {
-        $profil->load(['utilisateurs', 'permissions']);
-        
-        // Grouper les permissions par module
-        $permissionsParModule = $profil->permissions->groupBy('module');
-        
-        $modules = Profil::getAvailableModules();
-        
-        return view('admin.profils.show', compact('profil', 'permissionsParModule', 'modules'));
-    }
-
+  public function show(Profil $profil)
+{
+    $profil->load(['utilisateurs', 'permissions']);
+    
+    // Grouper les permissions par module
+    $permissionsParModule = $profil->permissions->groupBy('module');
+    
+    $modules = Profil::getAvailableModules();
+    
+    // Ajouter le nombre d'utilisateurs
+    $profil->utilisateurs_count = $profil->utilisateurs->count();
+    
+    return view('admin.profils.show', compact('profil', 'permissionsParModule', 'modules'));
+}
     /**
      * UC-ADM-02 : Afficher le formulaire d'édition
      */
@@ -138,8 +155,9 @@ class ProfilController extends Controller
             'nom_profil' => 'required|unique:profils,nom_profil,' . $profil->id . '|max:100',
             'description' => 'nullable|max:255',
             'permissions' => 'nullable|array',
-            'permissions.*.module' => 'required|string',
+            'permissions.*' => 'array',
             'permissions.*.actions' => 'required|array',
+            'permissions.*.actions.*' => 'string',
         ]);
         
         DB::beginTransaction();
@@ -155,13 +173,14 @@ class ProfilController extends Controller
             $profil->permissions()->delete();
             
             if (isset($validated['permissions'])) {
-                foreach ($validated['permissions'] as $permData) {
-                    $module = $permData['module'];
-                    foreach ($permData['actions'] as $action) {
-                        $profil->permissions()->create([
-                            'module' => $module,
-                            'action' => $action,
-                        ]);
+                foreach ($validated['permissions'] as $module => $permData) {
+                    if (isset($permData['actions']) && is_array($permData['actions'])) {
+                        foreach ($permData['actions'] as $action) {
+                            $profil->permissions()->create([
+                                'module' => $module,
+                                'action' => $action,
+                            ]);
+                        }
                     }
                 }
             }
@@ -249,8 +268,9 @@ class ProfilController extends Controller
     {
         $validated = $request->validate([
             'permissions' => 'nullable|array',
-            'permissions.*.module' => 'required|string',
+            'permissions.*' => 'array',
             'permissions.*.actions' => 'required|array',
+            'permissions.*.actions.*' => 'string',
         ]);
         
         DB::beginTransaction();
@@ -260,13 +280,14 @@ class ProfilController extends Controller
             $profil->permissions()->delete();
             
             if (isset($validated['permissions'])) {
-                foreach ($validated['permissions'] as $permData) {
-                    $module = $permData['module'];
-                    foreach ($permData['actions'] as $action) {
-                        $profil->permissions()->create([
-                            'module' => $module,
-                            'action' => $action,
-                        ]);
+                foreach ($validated['permissions'] as $module => $permData) {
+                    if (isset($permData['actions']) && is_array($permData['actions'])) {
+                        foreach ($permData['actions'] as $action) {
+                            $profil->permissions()->create([
+                                'module' => $module,
+                                'action' => $action,
+                            ]);
+                        }
                     }
                 }
             }

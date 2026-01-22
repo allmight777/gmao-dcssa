@@ -22,7 +22,7 @@ return new class extends Migration
 
             $table->string('code_geographique')->nullable();
 
-            // ❌ PAS de clé étrangère SQL (relation logique)
+           
             $table->unsignedBigInteger('responsable_id')->nullable();
 
             $table->text('adresse')->nullable();

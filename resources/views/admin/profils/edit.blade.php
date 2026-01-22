@@ -1,9 +1,9 @@
 @extends('layouts.admin')
 
-@section('title', 'Créer un nouveau profil')
+@section('title', 'Modifier le profil')
 <link rel="icon" type="image/webp" href="{{ asset('images/logo.webp') }}">
 
-@section('page-title', 'Créer un nouveau profil')
+@section('page-title', 'Modifier le profil')
 <br><br>
 @section('page-actions')
 <a href="{{ route('admin.profils.index') }}" class="btn-return">
@@ -23,8 +23,9 @@
         </div>
     @endif
 
-    <form method="POST" action="{{ route('admin.profils.store') }}" class="profil-form" id="profilForm">
+    <form method="POST" action="{{ route('admin.profils.update', $profil) }}" class="profil-form" id="profilForm">
         @csrf
+        @method('PUT')
         
         <!-- Section Informations du profil -->
         <div class="form-section">
@@ -36,7 +37,7 @@
                     <div class="input-with-icon">
                         <i class="fas fa-tag"></i>
                         <input type="text" id="nom_profil" name="nom_profil" 
-                               value="{{ old('nom_profil') }}" 
+                               value="{{ old('nom_profil', $profil->nom_profil) }}" 
                                placeholder="Ex: administrateur_systeme" required>
                     </div>
                     <small class="form-hint">Utilisez des underscores (_) pour les espaces</small>
@@ -51,7 +52,7 @@
                         <i class="fas fa-align-left"></i>
                         <textarea id="description" name="description" 
                                   placeholder="Description du rôle et des responsabilités"
-                                  rows="2">{{ old('description') }}</textarea>
+                                  rows="2">{{ old('description', $profil->description) }}</textarea>
                     </div>
                     @error('description')
                         <span class="error">{{ $message }}</span>
@@ -77,13 +78,26 @@
             
             <div class="permissions-grid">
                 @foreach($modules as $moduleKey => $moduleName)
+                @php
+                    $actions = \App\Models\Profil::getAvailableActions($moduleKey);
+                    $oldPermissions = old("permissions.{$moduleKey}.actions", 
+                        $permissionsParModule->has($moduleKey) 
+                            ? $permissionsParModule[$moduleKey]->pluck('action')->toArray() 
+                            : []
+                    );
+                @endphp
+                
                 <div class="module-card">
                     <div class="module-card-header">
                         <div class="module-checkbox">
                             <input type="checkbox" 
                                    class="module-checkbox-input" 
                                    id="module_{{ $moduleKey }}"
-                                   data-module="{{ $moduleKey }}">
+                                   data-module="{{ $moduleKey }}"
+                                   @if(count($oldPermissions) === count($actions)) checked @endif
+                                   @if(count($oldPermissions) > 0 && count($oldPermissions) < count($actions)) 
+                                        data-indeterminate="true"
+                                   @endif>
                             <label for="module_{{ $moduleKey }}" class="module-title">
                                 <span class="checkmark"></span>
                                 <span class="module-name">{{ $moduleName }}</span>
@@ -122,11 +136,6 @@
                     </div>
                     
                     <div class="module-card-body">
-                        @php
-                            $actions = \App\Models\Profil::getAvailableActions($moduleKey);
-                            $oldPermissions = old("permissions.{$moduleKey}.actions", []);
-                        @endphp
-                        
                         @if(!empty($actions))
                         <div class="actions-grid">
                             @foreach($actions as $action)
@@ -205,7 +214,7 @@
                 </a>
                 <button type="submit" class="btn-submit" id="submitBtn">
                     <i class="fas fa-save"></i>
-                    Créer le profil
+                    Mettre à jour le profil
                 </button>
             </div>
         </div>
@@ -848,6 +857,13 @@
                 confirmButtonText: 'OK'
             });
         }
+
+        // Initialiser les états indéterminés au chargement
+        moduleCheckboxes.forEach(checkbox => {
+            if (checkbox.hasAttribute('data-indeterminate') && checkbox.dataset.indeterminate === 'true') {
+                checkbox.indeterminate = true;
+            }
+        });
 
         // Initialiser l'état de "Sélectionner tout"
         updateSelectAllState();

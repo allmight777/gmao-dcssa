@@ -4,7 +4,13 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
+  <link rel="icon" type="image/webp" href="{{ asset('images/logo.webp') }}">
+
+
+
     <title>GMAO DCSSA - @yield('title', 'Administration')</title>
+    <link rel="icon" type="image/webp" href="{{ asset('images/logo.webp') }}">
+
     
     <!-- Bootstrap 5 CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
@@ -171,6 +177,12 @@
                     <i class="fas fa-users"></i> Gérer les comptes
                 </a>
             </li>
+          <li class="nav-item">
+    <a href="{{ route('admin.services.index') }}" 
+       class="nav-link {{ request()->routeIs('admin.services.*') ? 'active' : '' }}">
+        <i class="fas fa-building"></i> Services & Localisations
+    </a>
+</li>
             <li class="nav-item">
                 <a href="{{ route('admin.profils.index') }}" 
                    class="nav-link {{ request()->routeIs('admin.profils.*') ? 'active' : '' }}">

@@ -1,6 +1,8 @@
 @extends('layouts.admin')
 
 @section('title', 'Gestion des comptes utilisateurs')
+<link rel="icon" type="image/webp" href="{{ asset('images/logo.webp') }}">
+
 
 @section('page-title', 'Gestion des comptes utilisateurs')
 <br><br>
