@@ -63,6 +63,63 @@ class Utilisateur extends Authenticatable
     }
 
     /**
+     * Accesseur pour le nom du profil
+     */
+    public function getNomProfilAttribute()
+    {
+        return $this->profil->nom_profil ?? 'Non défini';
+    }
+
+    /**
+     * Accesseur pour l'affichage du profil formaté
+     */
+    public function getProfilFormateAttribute()
+    {
+        $nomProfil = $this->nom_profil;
+        return ucfirst(str_replace('_', ' ', $nomProfil));
+    }
+
+    /**
+     * Accesseur pour les classes CSS du badge de profil
+     */
+    public function getBadgeProfilAttribute()
+    {
+        $nomProfil = strtolower($this->nom_profil);
+        
+        $classes = [
+            'admin' => 'badge-admin',
+            'administrateur' => 'badge-admin',
+            'gestionnaire_inventaire' => 'badge-gestionnaire',
+            'gestionnaire' => 'badge-gestionnaire',
+            'magasinier' => 'badge-technicien',
+            'technicien' => 'badge-technicien',
+            'utilisateur' => 'badge-secondary',
+            'default' => 'badge-secondary'
+        ];
+        
+        $key = $classes[$nomProfil] ?? $classes['default'];
+        
+        // Retourne les classes sans le préfixe 'badge-'
+        return str_replace('badge-', '', $key);
+    }
+
+    /**
+     * Accesseur pour les classes CSS du badge de statut
+     */
+    public function getBadgeStatutAttribute()
+    {
+        $classes = [
+            'actif' => 'success',
+            'inactif' => 'secondary',
+            'suspendu' => 'danger',
+            'bloque' => 'warning',
+            'default' => 'secondary'
+        ];
+        
+        return $classes[strtolower($this->statut)] ?? $classes['default'];
+    }
+
+    /**
      * Relation avec le profil
      */
     public function profil()
@@ -96,13 +153,27 @@ class Utilisateur extends Authenticatable
 
     /**
      * Vérifie si l'utilisateur est administrateur
-     * (ajuster 'nom' selon le nom réel de la colonne dans profils)
      */
- public function isAdmin(): bool
-{
-    return optional($this->profil)->nom_profil && strtolower($this->profil->nom_profil) === 'admin';
-}
+    public function isAdmin(): bool
+    {
+        return optional($this->profil)->nom_profil && strtolower($this->profil->nom_profil) === 'admin';
+    }
 
+    /**
+     * Vérifie si l'utilisateur est gestionnaire d'inventaire
+     */
+    public function isGestionnaireInventaire(): bool
+    {
+        return optional($this->profil)->nom_profil && strtolower($this->profil->nom_profil) === 'gestionnaire_inventaire';
+    }
+
+    /**
+     * Vérifie si l'utilisateur est magasinier
+     */
+    public function isMagasinier(): bool
+    {
+        return optional($this->profil)->nom_profil && strtolower($this->profil->nom_profil) === 'magasinier';
+    }
 
     /**
      * Scope pour utilisateurs actifs

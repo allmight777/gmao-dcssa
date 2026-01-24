@@ -4,7 +4,7 @@
 <link rel="icon" type="image/webp" href="{{ asset('images/logo.webp') }}">
 
 @section('page-title', 'Créer un service/localisation')
-<br><br>
+
 @section('page-actions')
 <a href="{{ route('admin.services.index') }}" class="btn-return">
     <i class="fas fa-arrow-left"></i> Retour
@@ -44,6 +44,11 @@
                             @endforeach
                         </select>
                     </div>
+                    <small class="form-hint">
+                        <a href="javascript:void(0)" onclick="showTypeHelp()" class="link-help">
+                            <i class="fas fa-question-circle"></i> Besoin d'un type non listé ?
+                        </a>
+                    </small>
                     @error('type')
                         <span class="error">{{ $message }}</span>
                     @enderror
@@ -81,18 +86,34 @@
             <div class="form-row">
                 <div class="form-group">
                     <label for="parent_id">Parent</label>
-                    <div class="input-with-icon">
-                        <i class="fas fa-level-up-alt"></i>
-                        <select id="parent_id" name="parent_id" class="form-select">
-                            <option value="">Aucun parent (racine)</option>
-                            @foreach($parents as $id => $label)
-                                <option value="{{ $id }}" {{ old('parent_id') == $id ? 'selected' : '' }}>
-                                    {{ $label }}
-                                </option>
-                            @endforeach
-                        </select>
+                    <div class="search-container">
+                        <div class="input-with-icon">
+                            <i class="fas fa-search"></i>
+                            <input type="text" id="parent_search" class="search-input" 
+                                   placeholder="Rechercher un parent..." 
+                                   onkeyup="filterSelect('parent_id', this.value)">
+                        </div>
+                        <div class="input-with-icon">
+                            <i class="fas fa-level-up-alt"></i>
+                            <select id="parent_id" name="parent_id" class="form-select" size="5">
+                                <option value="">Aucun parent (racine)</option>
+                                @foreach($parents as $id => $label)
+                                    <option value="{{ $id }}" {{ old('parent_id') == $id ? 'selected' : '' }}>
+                                        {{ $label }}
+                                    </option>
+                                @endforeach
+                            </select>
+                        </div>
+                        <div class="select-actions">
+                            <a href="{{ route('admin.services.index') }}" target="_blank" class="btn-action">
+                                <i class="fas fa-external-link-alt"></i> Voir tous les services
+                            </a>
+                            <a href="{{ route('admin.services.create') }}" target="_blank" class="btn-action">
+                                <i class="fas fa-plus"></i> Créer un nouveau service
+                            </a>
+                        </div>
                     </div>
-                    <small class="form-hint">Sélectionnez l'élément parent dans la hiérarchie parmi les services déjà enregistrés</small>
+                    <small class="form-hint">Sélectionnez l'élément parent dans la hiérarchie</small>
                     @error('parent_id')
                         <span class="error">{{ $message }}</span>
                     @enderror
@@ -121,16 +142,32 @@
             <div class="form-row">
                 <div class="form-group">
                     <label for="responsable_id">Responsable</label>
-                    <div class="input-with-icon">
-                        <i class="fas fa-user"></i>
-                        <select id="responsable_id" name="responsable_id" class="form-select">
-                            <option value="">Aucun responsable</option>
-                            @foreach($responsables as $id => $label)
-                                <option value="{{ $id }}" {{ old('responsable_id') == $id ? 'selected' : '' }}>
-                                    {{ $label }}
-                                </option>
-                            @endforeach
-                        </select>
+                    <div class="search-container">
+                        <div class="input-with-icon">
+                            <i class="fas fa-search"></i>
+                            <input type="text" id="responsable_search" class="search-input" 
+                                   placeholder="Rechercher un responsable..." 
+                                   onkeyup="filterSelect('responsable_id', this.value)">
+                        </div>
+                        <div class="input-with-icon">
+                            <i class="fas fa-user"></i>
+                            <select id="responsable_id" name="responsable_id" class="form-select" size="5">
+                                <option value="">Aucun responsable</option>
+                                @foreach($responsables as $id => $label)
+                                    <option value="{{ $id }}" {{ old('responsable_id') == $id ? 'selected' : '' }}>
+                                        {{ $label }}
+                                    </option>
+                                @endforeach
+                            </select>
+                        </div>
+                        <div class="select-actions">
+                            <a href="{{ route('admin.comptes.index') }}" target="_blank" class="btn-action">
+                                <i class="fas fa-external-link-alt"></i> Voir tous les utilisateurs
+                            </a>
+                            <a href="{{ route('admin.comptes.create') }}" target="_blank" class="btn-action">
+                                <i class="fas fa-plus"></i> Créer un nouvel utilisateur
+                            </a>
+                        </div>
                     </div>
                     <small class="form-hint">Le responsable doit être cherché dans la table users</small>
                     @error('responsable_id')
@@ -202,6 +239,37 @@
         </div>
     </form>
 </div>
+
+<!-- Modal d'aide pour le type -->
+<div id="typeHelpModal" class="modal" style="display: none;">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3><i class="fas fa-question-circle"></i> Aide - Types de localisation</h3>
+            <button type="button" class="modal-close" onclick="closeTypeHelp()">&times;</button>
+        </div>
+        <div class="modal-body">
+            <p><strong>Si votre type n'est pas dans la liste :</strong></p>
+            <ol>
+                <li>Sélectionnez "Autre (saisie libre)" dans la liste</li>
+                <li>Un champ supplémentaire apparaîtra</li>
+                <li>Saisissez votre type spécifique (ex: Commission, Cellule, Unité, etc.)</li>
+            </ol>
+            <p><strong>Types recommandés :</strong></p>
+            <ul>
+                <li><strong>Service</strong> : Unité administrative (Direction, Département)</li>
+                <li><strong>Site</strong> : Localisation géographique (Hôpital, Camp)</li>
+                <li><strong>Bâtiment</strong> : Édifice physique</li>
+                <li><strong>Salle/Bureau</strong> : Pièce spécifique</li>
+                <li><strong>Laboratoire/Atelier</strong> : Espace technique</li>
+            </ul>
+            <div class="modal-actions">
+                <button type="button" class="btn-primary" onclick="closeTypeHelp()">
+                    <i class="fas fa-check"></i> Compris
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
 @endsection
 
 @push('styles')
@@ -219,6 +287,7 @@
         --danger: #ef4444;
         --warning: #f59e0b;
         --card-bg: #ffffff;
+        --modal-overlay: rgba(0, 0, 0, 0.5);
     }
 
     .create-service-container {
@@ -289,7 +358,7 @@
         left: 15px;
         color: var(--medium-gray);
         font-size: 16px;
-        z-index: 2;
+        z-index: 1;
     }
 
     .input-with-icon input,
@@ -304,6 +373,8 @@
         background: var(--white);
         color: var(--black);
         font-family: inherit;
+        position: relative;
+        z-index: 2;
     }
 
     .input-with-icon textarea {
@@ -324,6 +395,21 @@
         margin-top: 8px;
         font-size: 12px;
         color: var(--medium-gray);
+        line-height: 1.4;
+    }
+
+    .form-hint .link-help {
+        color: var(--primary-color);
+        text-decoration: none;
+        font-weight: 500;
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        cursor: pointer;
+    }
+
+    .form-hint .link-help:hover {
+        text-decoration: underline;
     }
 
     .error {
@@ -332,6 +418,79 @@
         margin-top: 8px;
         display: block;
         font-weight: 500;
+    }
+
+    /* Search Container */
+    .search-container {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    .search-input {
+        width: 100%;
+        padding: 10px 10px 10px 40px;
+        border: 2px solid var(--light-gray);
+        border-radius: 8px;
+        font-size: 14px;
+        transition: all 0.3s ease;
+    }
+
+    .search-input:focus {
+        border-color: var(--primary-color);
+        box-shadow: 0 0 0 3px rgba(3, 81, 188, 0.1);
+        outline: none;
+    }
+
+    .select-actions {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+        margin-top: 5px;
+    }
+
+    .btn-action {
+        background: var(--light-gray);
+        color: var(--medium-gray);
+        padding: 8px 12px;
+        border-radius: 6px;
+        text-decoration: none;
+        font-size: 12px;
+        font-weight: 500;
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        transition: all 0.3s ease;
+    }
+
+    .btn-action:hover {
+        background: var(--primary-light);
+        color: var(--white);
+        transform: translateY(-1px);
+    }
+
+    /* Style amélioré pour les selects avec scroll */
+    .form-select[multiple],
+    .form-select[size] {
+        height: auto;
+        min-height: 120px;
+        max-height: 200px;
+        overflow-y: auto;
+    }
+
+    .form-select option {
+        padding: 8px 12px;
+        border-bottom: 1px solid var(--light-gray);
+        cursor: pointer;
+    }
+
+    .form-select option:hover {
+        background-color: var(--light-gray);
+    }
+
+    .form-select option:checked {
+        background-color: var(--primary-light);
+        color: var(--white);
     }
 
     /* Form Actions */
@@ -415,6 +574,120 @@
         transform: translateY(-1px);
     }
 
+    /* Amélioration des selects */
+    .form-select {
+        appearance: none;
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='%23333' viewBox='0 0 16 16'%3E%3Cpath d='M7.247 11.14 2.451 5.658C1.885 5.013 2.345 4 3.204 4h9.592a1 1 0 0 1 .753 1.659l-4.796 5.48a1 1 0 0 1-1.506 0z'/%3E%3C/svg%3E");
+        background-repeat: no-repeat;
+        background-position: right 15px center;
+        background-size: 16px;
+        padding-right: 45px;
+        cursor: pointer;
+    }
+
+    /* Modal */
+    .modal {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: var(--modal-overlay);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        z-index: 1000;
+    }
+
+    .modal-content {
+        background: var(--white);
+        border-radius: 16px;
+        width: 90%;
+        max-width: 500px;
+        max-height: 80vh;
+        overflow-y: auto;
+        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+    }
+
+    .modal-header {
+        padding: 20px;
+        border-bottom: 2px solid var(--light-gray);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .modal-header h3 {
+        color: var(--primary-color);
+        margin: 0;
+        font-size: 18px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .modal-close {
+        background: none;
+        border: none;
+        font-size: 24px;
+        color: var(--medium-gray);
+        cursor: pointer;
+        padding: 0;
+        width: 30px;
+        height: 30px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .modal-close:hover {
+        color: var(--danger);
+    }
+
+    .modal-body {
+        padding: 20px;
+    }
+
+    .modal-body p {
+        margin-bottom: 15px;
+        line-height: 1.6;
+    }
+
+    .modal-body ol, .modal-body ul {
+        margin-bottom: 20px;
+        padding-left: 20px;
+    }
+
+    .modal-body li {
+        margin-bottom: 8px;
+        line-height: 1.5;
+    }
+
+    .modal-actions {
+        display: flex;
+        justify-content: flex-end;
+        margin-top: 20px;
+    }
+
+    .btn-primary {
+        background: var(--primary-color);
+        color: var(--white);
+        padding: 10px 20px;
+        border: none;
+        border-radius: 8px;
+        font-weight: 600;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        transition: all 0.3s ease;
+    }
+
+    .btn-primary:hover {
+        background: var(--primary-dark);
+        transform: translateY(-1px);
+    }
+
     /* Responsive */
     @media (max-width: 768px) {
         .service-form {
@@ -439,11 +712,26 @@
             width: 100%;
             justify-content: center;
         }
+
+        .select-actions {
+            flex-direction: column;
+        }
+
+        .btn-action {
+            width: 100%;
+            justify-content: center;
+        }
+
+        .modal-content {
+            width: 95%;
+            margin: 10px;
+        }
     }
 </style>
 @endpush
 
 @push('scripts')
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
     document.addEventListener('DOMContentLoaded', function() {
         // Fonction pour afficher/masquer le champ type personnalisé
@@ -454,6 +742,19 @@
             if (typeSelect.value === 'autre') {
                 customTypeGroup.style.display = 'block';
                 document.getElementById('type_custom').required = true;
+                
+                // Afficher une alerte d'information
+                Swal.fire({
+                    title: 'Type personnalisé',
+                    html: `
+                        <p>Vous avez sélectionné "Autre".</p>
+                        <p>Veuillez saisir le type spécifique dans le champ qui apparaît.</p>
+                        <p><strong>Exemples :</strong> Commission, Cellule, Unité, Division, etc.</p>
+                    `,
+                    icon: 'info',
+                    confirmButtonColor: '#0351BC',
+                    confirmButtonText: 'Compris'
+                });
             } else {
                 customTypeGroup.style.display = 'none';
                 document.getElementById('type_custom').required = false;
@@ -530,6 +831,45 @@
                 nomInput.focus();
                 return;
             }
+            
+            // Confirmation avant soumission
+            e.preventDefault();
+            const parentSelect = document.getElementById('parent_id');
+            const responsableSelect = document.getElementById('responsable_id');
+            
+            let message = 'Êtes-vous sûr de vouloir créer ce service/localisation ?';
+            
+            if (parentSelect.value || responsableSelect.value) {
+                message += '\n\n';
+                if (parentSelect.value) {
+                    const parentText = parentSelect.options[parentSelect.selectedIndex].text;
+                    message += `• Parent : ${parentText}\n`;
+                }
+                if (responsableSelect.value) {
+                    const responsableText = responsableSelect.options[responsableSelect.selectedIndex].text;
+                    message += `• Responsable : ${responsableText}\n`;
+                }
+            }
+            
+            Swal.fire({
+                title: 'Confirmer la création',
+                text: message,
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonColor: '#0351BC',
+                cancelButtonColor: '#6c757d',
+                confirmButtonText: 'Oui, créer',
+                cancelButtonText: 'Annuler'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    // Désactiver le bouton pour éviter les doubles soumissions
+                    submitBtn.disabled = true;
+                    submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Création en cours...';
+                    
+                    // Soumettre le formulaire
+                    form.submit();
+                }
+            });
         });
 
         function showAlert(title, text, icon) {
@@ -541,20 +881,41 @@
                 confirmButtonText: 'OK'
             });
         }
-
-        // Initialiser Select2 pour les select
-        $('#parent_id, #responsable_id').select2({
-            theme: 'bootstrap-5',
-            placeholder: 'Sélectionnez une option',
-            allowClear: true,
-            width: '100%'
-        });
-
-        $('#type').select2({
-            theme: 'bootstrap-5',
-            placeholder: 'Sélectionnez un type',
-            width: '100%'
-        });
     });
+
+    // Fonction pour filtrer les options des selects
+    function filterSelect(selectId, searchText) {
+        const select = document.getElementById(selectId);
+        const options = select.options;
+        searchText = searchText.toLowerCase();
+        
+        for (let i = 0; i < options.length; i++) {
+            const option = options[i];
+            const text = option.text.toLowerCase();
+            
+            if (text.includes(searchText) || searchText === '') {
+                option.style.display = '';
+            } else {
+                option.style.display = 'none';
+            }
+        }
+    }
+
+    // Fonctions pour la modal d'aide
+    function showTypeHelp() {
+        document.getElementById('typeHelpModal').style.display = 'flex';
+    }
+
+    function closeTypeHelp() {
+        document.getElementById('typeHelpModal').style.display = 'none';
+    }
+
+    // Fermer la modal en cliquant en dehors
+    window.onclick = function(event) {
+        const modal = document.getElementById('typeHelpModal');
+        if (event.target === modal) {
+            modal.style.display = 'none';
+        }
+    }
 </script>
 @endpush

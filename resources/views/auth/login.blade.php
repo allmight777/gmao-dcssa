@@ -50,10 +50,7 @@
 </head>
 <body>
     <div class="login-card">
-        <div class="login-header">
-            <h2><i class="fas fa-tools"></i> GMAO DCSSA</h2>
-            <p class="mb-0">Système de Gestion de Maintenance Assistée par Ordinateur</p>
-        </div>
+     
         
         <div class="login-body">
             @if($errors->any())
@@ -106,10 +103,7 @@
             
             <hr class="my-4">
             
-            <div class="text-center">
-                <p class="text-muted mb-2">Direction Centrale du Service de Santé des Armées</p>
-                <small class="text-muted">© {{ date('Y') }} GMAO DCSSA - Version 1.0</small>
-            </div>
+           
         </div>
     </div>
     

@@ -4,7 +4,159 @@
 <link rel="icon" type="image/webp" href="{{ asset('images/logo.webp') }}">
 
 @section('page-title', 'Détails du profil')
-<br><br>
+@push('styles')
+<style>
+    :root {
+        --primary-color: #0351BC;
+        --primary-light: #4a7fd4;
+        --primary-dark: #023a8a;
+        --black: #000000;
+        --dark-gray: #1a1a1a;
+        --medium-gray: #333333;
+        --light-gray: #f5f5f5;
+        --white: #ffffff;
+        --success: #10b981;
+        --danger: #ef4444;
+        --warning: #f59e0b;
+        --card-bg: #ffffff;
+    }
+
+    .avatar-circle-lg {
+        width: 80px;
+        height: 80px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-weight: bold;
+        font-size: 32px;
+    }
+    
+    .avatar-circle-sm {
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-weight: 500;
+        font-size: 14px;
+    }
+    
+    .badge-container {
+        display: flex;
+        gap: 6px;
+        flex-wrap: wrap;
+    }
+    
+    .module-icon {
+        width: 24px;
+        text-align: center;
+    }
+    
+    .permission-icon {
+        width: 20px;
+        text-align: center;
+    }
+    
+    .empty-state {
+        text-align: center;
+        padding: 30px 20px;
+    }
+    
+    /* Timeline styles */
+    .timeline {
+        position: relative;
+        padding-left: 30px;
+    }
+    
+    .timeline:before {
+        content: '';
+        position: absolute;
+        left: 15px;
+        top: 0;
+        bottom: 0;
+        width: 2px;
+        background: var(--light-gray);
+    }
+    
+    .timeline-item {
+        position: relative;
+        margin-bottom: 20px;
+    }
+    
+    .timeline-marker {
+        position: absolute;
+        left: -30px;
+        top: 0;
+        width: 30px;
+        height: 30px;
+        background: white;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border: 2px solid var(--light-gray);
+    }
+    
+    .timeline-content {
+        background: white;
+        padding: 15px;
+        border-radius: 8px;
+        border: 1px solid var(--light-gray);
+    }
+    
+    .accordion-button:not(.collapsed) {
+        background-color: rgba(3, 81, 188, 0.05);
+        color: var(--primary-color);
+    }
+    
+    .accordion-button:focus {
+        box-shadow: none;
+        border-color: var(--primary-light);
+    }
+    
+    .card-header {
+        border-bottom: 2px solid rgba(0,0,0,0.1);
+    }
+    
+    @media (max-width: 768px) {
+        .avatar-circle-lg {
+            width: 60px;
+            height: 60px;
+            font-size: 24px;
+        }
+        
+        .timeline {
+            padding-left: 20px;
+        }
+        
+        .timeline:before {
+            left: 10px;
+        }
+        
+        .timeline-marker {
+            left: -20px;
+            width: 20px;
+            height: 20px;
+            font-size: 12px;
+        }
+        
+        .timeline-content {
+            padding: 10px;
+        }
+        
+        .btn-group {
+            flex-wrap: wrap;
+            gap: 5px;
+        }
+    }
+</style>
+@endpush
+
+
 @section('page-actions')
 <a href="{{ route('admin.profils.index') }}" class="btn-return">
     <i class="fas fa-arrow-left"></i> Retour à la liste
@@ -88,9 +240,7 @@
                     <a href="{{ route('admin.profils.edit', $profil) }}" class="btn btn-warning">
                         <i class="fas fa-edit me-2"></i> Modifier le profil
                     </a>
-                    <a href="{{ route('admin.profils.permissions.edit', $profil) }}" class="btn btn-secondary">
-                        <i class="fas fa-key me-2"></i> Gérer les permissions
-                    </a>
+                
                     @if($profil->nom_profil != 'admin' && $profil->utilisateurs_count == 0)
                         <form action="{{ route('admin.profils.destroy', $profil) }}" method="POST" class="d-grid">
                             @csrf
@@ -415,157 +565,6 @@
 </div>
 @endsection
 
-@push('styles')
-<style>
-    :root {
-        --primary-color: #0351BC;
-        --primary-light: #4a7fd4;
-        --primary-dark: #023a8a;
-        --black: #000000;
-        --dark-gray: #1a1a1a;
-        --medium-gray: #333333;
-        --light-gray: #f5f5f5;
-        --white: #ffffff;
-        --success: #10b981;
-        --danger: #ef4444;
-        --warning: #f59e0b;
-        --card-bg: #ffffff;
-    }
-
-    .avatar-circle-lg {
-        width: 80px;
-        height: 80px;
-        border-radius: 50%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        color: white;
-        font-weight: bold;
-        font-size: 32px;
-    }
-    
-    .avatar-circle-sm {
-        width: 32px;
-        height: 32px;
-        border-radius: 50%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        color: white;
-        font-weight: 500;
-        font-size: 14px;
-    }
-    
-    .badge-container {
-        display: flex;
-        gap: 6px;
-        flex-wrap: wrap;
-    }
-    
-    .module-icon {
-        width: 24px;
-        text-align: center;
-    }
-    
-    .permission-icon {
-        width: 20px;
-        text-align: center;
-    }
-    
-    .empty-state {
-        text-align: center;
-        padding: 30px 20px;
-    }
-    
-    /* Timeline styles */
-    .timeline {
-        position: relative;
-        padding-left: 30px;
-    }
-    
-    .timeline:before {
-        content: '';
-        position: absolute;
-        left: 15px;
-        top: 0;
-        bottom: 0;
-        width: 2px;
-        background: var(--light-gray);
-    }
-    
-    .timeline-item {
-        position: relative;
-        margin-bottom: 20px;
-    }
-    
-    .timeline-marker {
-        position: absolute;
-        left: -30px;
-        top: 0;
-        width: 30px;
-        height: 30px;
-        background: white;
-        border-radius: 50%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        border: 2px solid var(--light-gray);
-    }
-    
-    .timeline-content {
-        background: white;
-        padding: 15px;
-        border-radius: 8px;
-        border: 1px solid var(--light-gray);
-    }
-    
-    .accordion-button:not(.collapsed) {
-        background-color: rgba(3, 81, 188, 0.05);
-        color: var(--primary-color);
-    }
-    
-    .accordion-button:focus {
-        box-shadow: none;
-        border-color: var(--primary-light);
-    }
-    
-    .card-header {
-        border-bottom: 2px solid rgba(0,0,0,0.1);
-    }
-    
-    @media (max-width: 768px) {
-        .avatar-circle-lg {
-            width: 60px;
-            height: 60px;
-            font-size: 24px;
-        }
-        
-        .timeline {
-            padding-left: 20px;
-        }
-        
-        .timeline:before {
-            left: 10px;
-        }
-        
-        .timeline-marker {
-            left: -20px;
-            width: 20px;
-            height: 20px;
-            font-size: 12px;
-        }
-        
-        .timeline-content {
-            padding: 10px;
-        }
-        
-        .btn-group {
-            flex-wrap: wrap;
-            gap: 5px;
-        }
-    }
-</style>
-@endpush
 
 @push('scripts')
 <script>

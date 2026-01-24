@@ -4,7 +4,7 @@
 
 @section('page-title', 'Gestion des profils et permissions')
 
-<br><br>
+<link rel="icon" type="image/webp" href="{{ asset('images/logo.webp') }}">
 @section('page-actions')
 <div class="btn-toolbar">
     <a href="{{ route('admin.profils.create') }}" class="btn btn-primary">
@@ -97,7 +97,60 @@
         </div>
     </div>
 
+    <div class="col-xl-3 col-md-6 mb-4">
+        <div class="card border-start border-info border-4 shadow h-100 py-2">
+            <div class="card-body">
+                <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                        <div class="text-xs fw-bold text-info text-uppercase mb-1">
+                            Moyenne par profil
+                        </div>
+                        <div class="h5 mb-0 fw-bold text-gray-800">
+                            {{ $totalProfils > 0 ? round($totalPermissions / $totalProfils, 1) : 0 }}
+                        </div>
+                    </div>
+                    <div class="col-auto">
+                        <i class="fas fa-chart-bar fa-2x text-gray-300"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
 
+<!-- Distribution des profils AVEC CONTAINER FIXE -->
+<div class="row mt-4">
+    <div class="col-md-6 mb-4">
+        <div class="card h-100">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-chart-pie me-2"></i>Distribution des utilisateurs
+                </h5>
+                <small class="text-muted">{{ $totalUtilisateurs }} utilisateurs</small>
+            </div>
+            <div class="card-body position-relative" style="height: 300px; padding-bottom: 20px;">
+                <div class="chart-container" style="position: absolute; top: 0; left: 0; right: 0; bottom: 0;">
+                    <canvas id="utilisateursChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-6 mb-4">
+        <div class="card h-100">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-chart-bar me-2"></i>Top profils par permissions
+                </h5>
+                <small class="text-muted">{{ $totalPermissions }} permissions</small>
+            </div>
+            <div class="card-body position-relative" style="height: 300px; padding-bottom: 20px;">
+                <div class="chart-container" style="position: absolute; top: 0; left: 0; right: 0; bottom: 0;">
+                    <canvas id="permissionsChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
 
 <!-- Liste des profils -->
@@ -111,9 +164,9 @@
         </div>
     </div>
     <div class="card-body">
-        <div class="table-responsive">
+        <div class="table-responsive" style="max-height: 500px; overflow-y: auto;">
             <table class="table table-hover">
-                <thead class="table-light">
+                <thead class="table-light sticky-top" style="top: 0; background: white; z-index: 10;">
                     <tr>
                         <th>Nom du profil</th>
                         <th>Description</th>
@@ -203,13 +256,6 @@
                                        title="Modifier">
                                         <i class="fas fa-edit"></i>
                                     </a>
-                                    <a href="{{ route('admin.profils.permissions.edit', $profil) }}" 
-                                       class="btn btn-sm btn-secondary action-btn"
-                                       data-bs-toggle="tooltip" 
-                                       title="Gérer les permissions">
-                                        <i class="fas fa-key"></i>
-                                    </a>
-                                    
                                     <!-- Duplicate modal trigger -->
                                     <button type="button" class="btn btn-sm btn-success action-btn" 
                                             data-bs-toggle="modal" 
@@ -334,35 +380,6 @@
                 </nav>
             </div>
         @endif
-    </div>
-</div>
-
-<!-- Distribution des profils -->
-<div class="row mt-4">
-    <div class="col-md-6 mb-4">
-        <div class="card h-100">
-            <div class="card-header">
-                <h5 class="card-title mb-0">
-                    <i class="fas fa-chart-pie me-2"></i>Distribution des utilisateurs
-                </h5>
-            </div>
-            <div class="card-body">
-                <canvas id="utilisateursChart" height="250"></canvas>
-            </div>
-        </div>
-    </div>
-    
-    <div class="col-md-6 mb-4">
-        <div class="card h-100">
-            <div class="card-header">
-                <h5 class="card-title mb-0">
-                    <i class="fas fa-chart-bar me-2"></i>Top profils par permissions
-                </h5>
-            </div>
-            <div class="card-body">
-                <canvas id="permissionsChart" height="250"></canvas>
-            </div>
-        </div>
     </div>
 </div>
 
@@ -504,6 +521,20 @@
         align-items: center;
     }
     
+    /* Style pour les charts containers */
+    .chart-container {
+        position: relative;
+        height: 100%;
+        width: 100%;
+    }
+    
+    /* Empêcher le défilement infini */
+    canvas {
+        display: block !important;
+        max-height: 280px !important;
+        max-width: 100% !important;
+    }
+    
     @media (max-width: 768px) {
         .table-responsive {
             border: 0;
@@ -554,6 +585,11 @@
             max-width: none;
             white-space: normal;
         }
+        
+        /* Ajuster la hauteur des charts sur mobile */
+        .card-body[style*="height: 300px"] {
+            height: 250px !important;
+        }
     }
 </style>
 @endpush
@@ -589,9 +625,33 @@
         initResponsiveTable();
         $(window).on('resize', initResponsiveTable);
         
-        // Charts
-        const ctx1 = document.getElementById('utilisateursChart').getContext('2d');
-        const ctx2 = document.getElementById('permissionsChart').getContext('2d');
+        // Charts - AVEC OPTIONS POUR ÉVITER LE DÉFILEMENT
+        const chartOptions = {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    position: 'bottom',
+                    labels: {
+                        padding: 20,
+                        usePointStyle: true,
+                        boxWidth: 12,
+                        font: {
+                            size: 11
+                        }
+                    }
+                }
+            },
+            // Options spécifiques pour éviter l'expansion
+            layout: {
+                padding: {
+                    top: 10,
+                    right: 10,
+                    bottom: 10,
+                    left: 10
+                }
+            }
+        };
         
         // Données pour le graphique des utilisateurs
         const utilisateursData = {
@@ -607,9 +667,9 @@
                     @endforeach
                 ],
                 backgroundColor: [
-                    '#ff6384', '#36a2eb', '#ffce56', '#4bc0c0', 
-                    '#9966ff', '#ff9f40', '#8ac926', '#1982c4',
-                    '#6a4c93', '#f15bb5'
+                    '#dc3545', '#28a745', '#17a2b8', '#ffc107', 
+                    '#6f42c1', '#20c997', '#fd7e14', '#6c757d',
+                    '#6610f2', '#e83e8c'
                 ],
                 borderWidth: 2,
                 borderColor: '#fff'
@@ -630,72 +690,48 @@
                         {{ $profil->permissions()->count() }},
                     @endforeach
                 ],
-                backgroundColor: 'rgba(54, 162, 235, 0.2)',
-                borderColor: 'rgba(54, 162, 235, 1)',
+                backgroundColor: 'rgba(40, 167, 69, 0.2)',
+                borderColor: 'rgba(40, 167, 69, 1)',
                 borderWidth: 2,
                 borderRadius: 5,
                 borderSkipped: false
             }]
         };
         
-        // Configuration commune
-        const chartOptions = {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: {
-                legend: {
-                    display: false
-                },
-                tooltip: {
-                    callbacks: {
-                        label: function(context) {
-                            let label = context.label || '';
-                            if (label) {
-                                label += ': ';
-                            }
-                            label += context.raw;
-                            return label;
-                        }
-                    }
-                }
-            }
-        };
-        
         // Graphique circulaire (utilisateurs)
-        new Chart(ctx1, {
-            type: 'doughnut',
-            data: utilisateursData,
-            options: {
-                ...chartOptions,
-                plugins: {
-                    ...chartOptions.plugins,
-                    legend: {
-                        position: 'bottom',
-                        labels: {
-                            padding: 20,
-                            usePointStyle: true
-                        }
-                    }
-                }
-            }
-        });
+        const ctx1 = document.getElementById('utilisateursChart').getContext('2d');
+        if (ctx1) {
+            new Chart(ctx1, {
+                type: 'doughnut',
+                data: utilisateursData,
+                options: chartOptions
+            });
+        }
         
         // Graphique à barres (permissions)
-        new Chart(ctx2, {
-            type: 'bar',
-            data: permissionsData,
-            options: {
-                ...chartOptions,
-                scales: {
-                    y: {
-                        beginAtZero: true,
-                        ticks: {
-                            stepSize: 5
+        const ctx2 = document.getElementById('permissionsChart').getContext('2d');
+        if (ctx2) {
+            new Chart(ctx2, {
+                type: 'bar',
+                data: permissionsData,
+                options: {
+                    ...chartOptions,
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                stepSize: 5
+                            }
                         }
                     }
                 }
-            }
-        });
+            });
+        }
     });
 </script>
 @endpush

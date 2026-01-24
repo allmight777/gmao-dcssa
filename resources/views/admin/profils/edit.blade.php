@@ -4,7 +4,7 @@
 <link rel="icon" type="image/webp" href="{{ asset('images/logo.webp') }}">
 
 @section('page-title', 'Modifier le profil')
-<br><br>
+
 @section('page-actions')
 <a href="{{ route('admin.profils.index') }}" class="btn-return">
     <i class="fas fa-arrow-left"></i> Retour

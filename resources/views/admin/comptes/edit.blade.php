@@ -4,8 +4,6 @@
 
 @section('page-title', 'Modifier le compte')
 
-<br><br>
-
 @section('page-actions')
 <a href="{{ route('admin.comptes.index') }}" class="btn-return">
     <i class="fas fa-arrow-left"></i> Retour
@@ -13,8 +11,16 @@
 @endsection
 
 @section('content')
-<div class="create-compte-container">
- 
+<div class="create-service-container">
+    @if ($errors->any())
+        <div class="alert alert-danger">
+            <ul class="mb-0">
+                @foreach ($errors->all() as $error)
+                    <li>{{ $error }}</li>
+                @endforeach
+            </ul>
+        </div>
+    @endif
 
     @if(session('success'))
         <div class="success-message">
@@ -22,7 +28,7 @@
         </div>
     @endif
 
-    <form method="POST" action="{{ route('admin.comptes.update', $compte) }}" class="compte-form" id="compteForm">
+    <form method="POST" action="{{ route('admin.comptes.update', $compte) }}" class="service-form" id="compteForm">
         @csrf
         @method('PUT')
 
@@ -39,6 +45,7 @@
                                value="{{ old('matricule', $compte->matricule) }}" 
                                placeholder="Ex: MAT001" required>
                     </div>
+                    <small class="form-hint">Identifiant unique de l'agent</small>
                     @error('matricule')
                         <span class="error">{{ $message }}</span>
                     @enderror
@@ -48,7 +55,7 @@
                     <label for="profil_id">Profil *</label>
                     <div class="input-with-icon">
                         <i class="fas fa-user-tag"></i>
-                        <select id="profil_id" name="profil_id" required>
+                        <select id="profil_id" name="profil_id" class="form-select" required>
                             <option value="">Sélectionnez un profil</option>
                             @foreach($profils as $profil)
                                 <option value="{{ $profil->id }}" {{ old('profil_id', $compte->profil_id) == $profil->id ? 'selected' : '' }}>
@@ -57,6 +64,11 @@
                             @endforeach
                         </select>
                     </div>
+                     <br>
+                      <a href="{{ route('admin.profils.create') }}" class="btn btn-primary">
+        <i class="fas fa-plus-circle"></i> Nouveau profil
+    </a>
+                    <small class="form-hint">Détermine les permissions de l'utilisateur</small>
                     @error('profil_id')
                         <span class="error">{{ $message }}</span>
                     @enderror
@@ -127,16 +139,32 @@
             <div class="form-row">
                 <div class="form-group">
                     <label for="service_id">Service</label>
-                    <div class="input-with-icon">
-                        <i class="fas fa-building"></i>
-                        <select id="service_id" name="service_id">
-                            <option value="">Sélectionnez un service</option>
-                            @foreach($services as $service)
-                                <option value="{{ $service->id }}" {{ old('service_id', $compte->service_id) == $service->id ? 'selected' : '' }}>
-                                    {{ $service->nom }}
-                                </option>
-                            @endforeach
-                        </select>
+                    <div class="search-container">
+                        <div class="input-with-icon">
+                            <i class="fas fa-search"></i>
+                            <input type="text" id="service_search" class="search-input" 
+                                   placeholder="Rechercher un service..." 
+                                   onkeyup="filterSelect('service_id', this.value)">
+                        </div>
+                        <div class="input-with-icon">
+                            <i class="fas fa-building"></i>
+                            <select id="service_id" name="service_id" class="form-select" size="5">
+                                <option value="">Sélectionnez un service</option>
+                                @foreach($services as $service)
+                                    <option value="{{ $service->id }}" {{ old('service_id', $compte->service_id) == $service->id ? 'selected' : '' }}>
+                                        {{ $service->nom }}
+                                    </option>
+                                @endforeach
+                            </select>
+                        </div>
+                        <div class="select-actions">
+                            <a href="{{ route('admin.services.index') }}" target="_blank" class="btn-action">
+                                <i class="fas fa-external-link-alt"></i> Voir tous les services
+                            </a>
+                            <a href="{{ route('admin.services.create') }}" target="_blank" class="btn-action">
+                                <i class="fas fa-plus"></i> Créer un nouveau service
+                            </a>
+                        </div>
                     </div>
                     @error('service_id')
                         <span class="error">{{ $message }}</span>
@@ -147,7 +175,7 @@
                     <label for="statut">Statut *</label>
                     <div class="input-with-icon">
                         <i class="fas fa-circle"></i>
-                        <select id="statut" name="statut" required>
+                        <select id="statut" name="statut" class="form-select" required>
                             <option value="actif" {{ old('statut', $compte->statut) == 'actif' ? 'selected' : '' }}>
                                 Actif
                             </option>
@@ -233,11 +261,12 @@
                             <div class="input-with-icon">
                                 <i class="fas fa-lock"></i>
                                 <input type="password" id="new_password" name="new_password" 
-                                       placeholder="Laissez vide pour conserver l'actuel">
+                                       placeholder="Minimum 12 caractères (laissez vide pour conserver l'actuel)">
                                 <button type="button" class="password-toggle" id="toggleNewPassword">
                                     <i class="fas fa-eye"></i>
                                 </button>
                             </div>
+                            <small class="form-hint">Si rempli, le mot de passe sera mis à jour</small>
                         </div>
 
                         <div class="form-group">
@@ -263,45 +292,13 @@
                     <i class="fas fa-times"></i>
                     Annuler
                 </a>
-                <button type="submit" class="btn-submit">
+                <button type="submit" class="btn-submit" id="submitBtn">
                     <i class="fas fa-save"></i>
                     Enregistrer les modifications
                 </button>
             </div>
         </div>
     </form>
-
-    <!-- Modal de confirmation de réinitialisation -->
-    <div class="modal" id="resetPasswordModal" style="display: none;">
-        <div class="modal-content">
-            <h3><i class="fas fa-key"></i> Réinitialiser le mot de passe</h3>
-            <form id="resetPasswordForm" action="{{ route('admin.comptes.reset-password', $compte) }}" method="POST">
-                @csrf
-                <div class="form-group">
-                    <label for="reset_password">Nouveau mot de passe *</label>
-                    <div class="input-with-icon">
-                        <i class="fas fa-lock"></i>
-                        <input type="password" id="reset_password" name="password" required>
-                    </div>
-                </div>
-                <div class="form-group">
-                    <label for="reset_password_confirmation">Confirmer le mot de passe *</label>
-                    <div class="input-with-icon">
-                        <i class="fas fa-lock"></i>
-                        <input type="password" id="reset_password_confirmation" name="password_confirmation" required>
-                    </div>
-                </div>
-                <div class="modal-actions">
-                    <button type="button" class="btn-cancel" onclick="closeResetModal()">
-                        <i class="fas fa-times"></i> Annuler
-                    </button>
-                    <button type="submit" class="btn-submit">
-                        <i class="fas fa-check"></i> Réinitialiser
-                    </button>
-                </div>
-            </form>
-        </div>
-    </div>
 </div>
 @endsection
 
@@ -319,51 +316,16 @@
         --success: #10b981;
         --danger: #ef4444;
         --warning: #f59e0b;
+        --card-bg: #ffffff;
+        --modal-overlay: rgba(0, 0, 0, 0.5);
     }
 
-    .create-compte-container {
+    .create-service-container {
         background: var(--white);
         border-radius: 20px;
         box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
         overflow: hidden;
         border: 1px solid rgba(0, 0, 0, 0.1);
-    }
-
-    .compte-header {
-        background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-dark) 100%);
-        color: var(--white);
-        padding: 40px;
-        text-align: center;
-        position: relative;
-        overflow: hidden;
-    }
-
-    .compte-header::before {
-        content: '';
-        position: absolute;
-        top: -50%;
-        left: -50%;
-        width: 200%;
-        height: 200%;
-        background: radial-gradient(circle, rgba(255, 255, 255, 0.1) 0%, transparent 70%);
-    }
-
-    .compte-header h1 {
-        font-size: 32px;
-        margin-bottom: 10px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        gap: 15px;
-        position: relative;
-        z-index: 1;
-    }
-
-    .compte-header p {
-        font-size: 16px;
-        opacity: 0.9;
-        position: relative;
-        z-index: 1;
     }
 
     .success-message {
@@ -381,7 +343,7 @@
         gap: 10px;
     }
 
-    .compte-form {
+    .service-form {
         padding: 40px;
     }
 
@@ -441,11 +403,12 @@
         left: 15px;
         color: var(--medium-gray);
         font-size: 16px;
-        z-index: 2;
+        z-index: 1;
     }
 
     .input-with-icon input,
-    .input-with-icon select {
+    .input-with-icon select,
+    .input-with-icon textarea {
         width: 100%;
         padding: 14px 14px 14px 45px;
         border: 2px solid var(--light-gray);
@@ -454,15 +417,85 @@
         transition: all 0.3s ease;
         background: var(--white);
         color: var(--black);
+        font-family: inherit;
+        position: relative;
+        z-index: 2;
     }
 
     .input-with-icon input:focus,
-    .input-with-icon select:focus {
+    .input-with-icon select:focus,
+    .input-with-icon textarea:focus {
         outline: none;
         border-color: var(--primary-color);
         box-shadow: 0 0 0 3px rgba(3, 81, 188, 0.1);
     }
 
+    .form-hint {
+        display: block;
+        margin-top: 8px;
+        font-size: 12px;
+        color: var(--medium-gray);
+        line-height: 1.4;
+    }
+
+    .error {
+        color: var(--danger);
+        font-size: 12px;
+        margin-top: 8px;
+        display: block;
+        font-weight: 500;
+    }
+
+    /* Search Container */
+    .search-container {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    .search-input {
+        width: 100%;
+        padding: 10px 10px 10px 40px;
+        border: 2px solid var(--light-gray);
+        border-radius: 8px;
+        font-size: 14px;
+        transition: all 0.3s ease;
+    }
+
+    .search-input:focus {
+        border-color: var(--primary-color);
+        box-shadow: 0 0 0 3px rgba(3, 81, 188, 0.1);
+        outline: none;
+    }
+
+    .select-actions {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+        margin-top: 5px;
+    }
+
+    .btn-action {
+        background: var(--light-gray);
+        color: var(--medium-gray);
+        padding: 8px 12px;
+        border-radius: 6px;
+        text-decoration: none;
+        font-size: 12px;
+        font-weight: 500;
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        transition: all 0.3s ease;
+    }
+
+    .btn-action:hover {
+        background: var(--primary-light);
+        color: var(--white);
+        transform: translateY(-1px);
+    }
+
+    /* Password Toggle */
     .password-toggle {
         position: absolute;
         right: 15px;
@@ -476,14 +509,6 @@
 
     .password-toggle:hover {
         color: var(--primary-color);
-    }
-
-    .error {
-        color: var(--danger);
-        font-size: 12px;
-        margin-top: 8px;
-        display: block;
-        font-weight: 500;
     }
 
     /* Password Reset Section */
@@ -545,45 +570,6 @@
         }
     }
 
-    /* Modal Styles */
-    .modal {
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        background: rgba(0, 0, 0, 0.5);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        z-index: 1000;
-    }
-
-    .modal-content {
-        background: var(--white);
-        padding: 30px;
-        border-radius: 15px;
-        width: 90%;
-        max-width: 500px;
-        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
-    }
-
-    .modal-content h3 {
-        color: var(--primary-color);
-        margin-bottom: 20px;
-        font-size: 20px;
-        display: flex;
-        align-items: center;
-        gap: 10px;
-    }
-
-    .modal-actions {
-        display: flex;
-        gap: 15px;
-        justify-content: flex-end;
-        margin-top: 20px;
-    }
-
     /* Form Actions */
     .form-actions {
         display: flex;
@@ -627,9 +613,14 @@
         box-shadow: 0 4px 15px rgba(3, 81, 188, 0.3);
     }
 
-    .btn-submit:hover {
+    .btn-submit:hover:not(:disabled) {
         transform: translateY(-2px);
         box-shadow: 0 6px 20px rgba(3, 81, 188, 0.4);
+    }
+
+    .btn-submit:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
     }
 
     .btn-cancel {
@@ -674,11 +665,49 @@
         transform: translateY(-1px);
     }
 
+    /* Amélioration des selects */
+    .form-select {
+        appearance: none;
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='%23333' viewBox='0 0 16 16'%3E%3Cpath d='M7.247 11.14 2.451 5.658C1.885 5.013 2.345 4 3.204 4h9.592a1 1 0 0 1 .753 1.659l-4.796 5.48a1 1 0 0 1-1.506 0z'/%3E%3C/svg%3E");
+        background-repeat: no-repeat;
+        background-position: right 15px center;
+        background-size: 16px;
+        padding-right: 45px;
+        cursor: pointer;
+    }
+
+    /* Style amélioré pour les selects avec scroll */
+    .form-select[multiple],
+    .form-select[size] {
+        height: auto;
+        min-height: 120px;
+        max-height: 200px;
+        overflow-y: auto;
+    }
+
+    .form-select option {
+        padding: 8px 12px;
+        border-bottom: 1px solid var(--light-gray);
+        cursor: pointer;
+    }
+
+    .form-select option:hover {
+        background-color: var(--light-gray);
+    }
+
+    .form-select option:checked {
+        background-color: var(--primary-light);
+        color: var(--white);
+    }
+
     /* Responsive */
     @media (max-width: 768px) {
-        .compte-header,
-        .compte-form {
+        .service-form {
             padding: 20px;
+        }
+
+        .success-message {
+            margin: 20px;
         }
 
         .form-section {
@@ -706,6 +735,19 @@
             flex-direction: column;
         }
 
+        .requirements-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .select-actions {
+            flex-direction: column;
+        }
+
+        .btn-action {
+            width: 100%;
+            justify-content: center;
+        }
+
         .btn-submit,
         .btn-cancel {
             width: 100%;
@@ -716,8 +758,12 @@
 @endpush
 
 @push('scripts')
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
     document.addEventListener('DOMContentLoaded', function() {
+        const form = document.getElementById('compteForm');
+        const submitBtn = document.getElementById('submitBtn');
+        
         // Toggle password reset fields
         const toggleBtn = document.getElementById('togglePasswordReset');
         const resetFields = document.getElementById('passwordResetFields');
@@ -736,74 +782,200 @@
         const toggleNewPasswordBtn = document.getElementById('toggleNewPassword');
         const newPasswordInput = document.getElementById('new_password');
         
-        toggleNewPasswordBtn.addEventListener('click', function() {
-            const type = newPasswordInput.getAttribute('type') === 'password' ? 'text' : 'password';
-            newPasswordInput.setAttribute('type', type);
-            this.querySelector('i').className = type === 'password' ? 'fas fa-eye' : 'fas fa-eye-slash';
-        });
+        if (toggleNewPasswordBtn && newPasswordInput) {
+            toggleNewPasswordBtn.addEventListener('click', function() {
+                const type = newPasswordInput.getAttribute('type') === 'password' ? 'text' : 'password';
+                newPasswordInput.setAttribute('type', type);
+                this.querySelector('i').className = type === 'password' ? 'fas fa-eye' : 'fas fa-eye-slash';
+            });
+        }
 
-        // Validation du formulaire
-        const form = document.getElementById('compteForm');
-        
+        // Vérification du mot de passe
+        function checkPassword(password) {
+            const checks = {
+                length: password.length >= 12,
+                upper: /[A-Z]/.test(password),
+                lower: /[a-z]/.test(password),
+                number: /\d/.test(password),
+                special: /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(password)
+            };
+            
+            return checks;
+        }
+
+        // Valider le formulaire
+        function validateForm() {
+            const newPassword = document.getElementById('new_password')?.value || '';
+            const confirmPassword = document.getElementById('new_password_confirmation')?.value || '';
+            
+            // Si un nouveau mot de passe est fourni
+            if (newPassword) {
+                // Vérifier la longueur
+                if (newPassword.length < 12) {
+                    return {
+                        valid: false,
+                        message: 'Le nouveau mot de passe doit contenir au moins 12 caractères.'
+                    };
+                }
+                
+                // Vérifier la correspondance
+                if (newPassword !== confirmPassword) {
+                    return {
+                        valid: false,
+                        message: 'Les nouveaux mots de passe ne correspondent pas.'
+                    };
+                }
+                
+                // Vérifier la force du mot de passe
+                const checks = checkPassword(newPassword);
+                const allValid = Object.values(checks).every(Boolean);
+                
+                if (!allValid) {
+                    return {
+                        valid: false,
+                        message: 'Le nouveau mot de passe ne respecte pas toutes les exigences de sécurité.'
+                    };
+                }
+            }
+            
+            return { valid: true };
+        }
+
+        // Validation avant soumission
         form.addEventListener('submit', function(e) {
-            const newPassword = document.getElementById('new_password').value;
-            const confirmPassword = document.getElementById('new_password_confirmation').value;
+            e.preventDefault();
             
-            // Si un nouveau mot de passe est fourni, vérifier la confirmation
-            if (newPassword && newPassword !== confirmPassword) {
-                e.preventDefault();
-                alert('Les nouveaux mots de passe ne correspondent pas.');
-                document.getElementById('new_password_confirmation').focus();
-            }
+            const validation = validateForm();
             
-            // Validation de la force du mot de passe si fourni
-            if (newPassword && newPassword.length < 12) {
-                e.preventDefault();
-                alert('Le nouveau mot de passe doit contenir au moins 12 caractères.');
-                document.getElementById('new_password').focus();
-            }
-        });
-
-        // Modal functions
-        window.openResetModal = function() {
-            document.getElementById('resetPasswordModal').style.display = 'flex';
-        };
-
-        window.closeResetModal = function() {
-            document.getElementById('resetPasswordModal').style.display = 'none';
-        };
-
-        // Fermer la modal en cliquant à l'extérieur
-        document.getElementById('resetPasswordModal').addEventListener('click', function(e) {
-            if (e.target === this) {
-                closeResetModal();
-            }
-        });
-
-        // Validation de la modal de réinitialisation
-        document.getElementById('resetPasswordForm').addEventListener('submit', function(e) {
-            const password = document.getElementById('reset_password').value;
-            const confirmPassword = document.getElementById('reset_password_confirmation').value;
-            
-            if (password.length < 12) {
-                e.preventDefault();
-                alert('Le mot de passe doit contenir au moins 12 caractères.');
+            if (!validation.valid) {
+                showAlert('Erreur de validation', validation.message, 'error');
                 return;
             }
             
-            if (password !== confirmPassword) {
-                e.preventDefault();
-                alert('Les mots de passe ne correspondent pas.');
+            // Vérifier si des modifications ont été apportées
+            const formData = new FormData(form);
+            const originalData = {
+                matricule: '{{ $compte->matricule }}',
+                nom: '{{ $compte->nom }}',
+                prenom: '{{ $compte->prenom }}',
+                grade: '{{ $compte->grade }}',
+                fonction: '{{ $compte->fonction }}',
+                service_id: '{{ $compte->service_id }}',
+                email: '{{ $compte->email }}',
+                telephone: '{{ $compte->telephone }}',
+                login: '{{ $compte->login }}',
+                profil_id: '{{ $compte->profil_id }}',
+                statut: '{{ $compte->statut }}'
+            };
+            
+            let hasChanges = false;
+            let changes = [];
+            
+            for (let [key, value] of formData.entries()) {
+                value = value.toString().trim();
+                if (key === 'new_password' && value === '') continue;
+                if (key === 'new_password_confirmation' && value === '') continue;
+                if (key === '_method' || key === '_token') continue;
+                
+                if (value !== originalData[key]) {
+                    hasChanges = true;
+                    
+                    // Récupérer les noms des champs pour l'affichage
+                    const fieldNames = {
+                        matricule: 'Matricule',
+                        nom: 'Nom',
+                        prenom: 'Prénom',
+                        grade: 'Grade',
+                        fonction: 'Fonction',
+                        service_id: 'Service',
+                        email: 'Email',
+                        telephone: 'Téléphone',
+                        login: 'Login',
+                        profil_id: 'Profil',
+                        statut: 'Statut',
+                        new_password: 'Mot de passe'
+                    };
+                    
+                    const fieldName = fieldNames[key] || key;
+                    changes.push(fieldName);
+                }
+            }
+            
+            if (!hasChanges) {
+                Swal.fire({
+                    title: 'Aucune modification',
+                    text: 'Vous n\'avez effectué aucune modification.',
+                    icon: 'info',
+                    confirmButtonColor: '#0351BC',
+                    confirmButtonText: 'OK'
+                }).then(() => {
+                    window.location.href = "{{ route('admin.comptes.index') }}";
+                });
                 return;
             }
+            
+            // Confirmation avant soumission
+            let message = 'Êtes-vous sûr de vouloir mettre à jour ce compte ?';
+            
+            if (changes.length > 0) {
+                message += '\n\nChangements détectés :';
+                changes.forEach(change => {
+                    message += `\n• ${change}`;
+                });
+            }
+            
+            if (document.getElementById('new_password')?.value) {
+                message += '\n\n⚠️ Le mot de passe sera modifié.';
+            }
+            
+            Swal.fire({
+                title: 'Confirmer la modification',
+                text: message,
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonColor: '#0351BC',
+                cancelButtonColor: '#6c757d',
+                confirmButtonText: 'Oui, enregistrer',
+                cancelButtonText: 'Annuler'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    // Désactiver le bouton pour éviter les doubles soumissions
+                    submitBtn.disabled = true;
+                    submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Enregistrement en cours...';
+                    
+                    // Soumettre le formulaire
+                    form.submit();
+                }
+            });
         });
 
-        // Initialiser Select2
-        $('#profil_id, #service_id').select2({
-            theme: 'bootstrap-5',
-            width: '100%',
-            placeholder: 'Sélectionnez une option'
-        });
+        function showAlert(title, text, icon) {
+            Swal.fire({
+                title: title,
+                text: text,
+                icon: icon,
+                confirmButtonColor: '#0351BC',
+                confirmButtonText: 'OK'
+            });
+        }
     });
+
+    // Fonction pour filtrer les options des selects
+    function filterSelect(selectId, searchText) {
+        const select = document.getElementById(selectId);
+        const options = select.options;
+        searchText = searchText.toLowerCase();
+        
+        for (let i = 0; i < options.length; i++) {
+            const option = options[i];
+            const text = option.text.toLowerCase();
+            
+            if (text.includes(searchText) || searchText === '') {
+                option.style.display = '';
+            } else {
+                option.style.display = 'none';
+            }
+        }
+    }
 </script>
 @endpush

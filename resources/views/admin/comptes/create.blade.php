@@ -1,20 +1,26 @@
 @extends('layouts.admin')
 
 @section('title', 'Créer un nouveau compte')
-<link rel="icon" type="image/webp" href="{{ asset('images/logo.webp') }}">
-
 
 @section('page-title', 'Créer un nouveau compte')
-<br><br>
+
 @section('page-actions')
-<a href="{{ route('admin.comptes.index') }}" class="btn btn-secondary">
+<a href="{{ route('admin.comptes.index') }}" class="btn-return">
     <i class="fas fa-arrow-left"></i> Retour
 </a>
 @endsection
 
 @section('content')
-<div class="create-compte-container">
-
+<div class="create-service-container">
+    @if ($errors->any())
+        <div class="alert alert-danger">
+            <ul class="mb-0">
+                @foreach ($errors->all() as $error)
+                    <li>{{ $error }}</li>
+                @endforeach
+            </ul>
+        </div>
+    @endif
 
     @if(session('success'))
         <div class="success-message">
@@ -22,9 +28,9 @@
         </div>
     @endif
 
-    <form method="POST" action="{{ route('admin.comptes.store') }}" class="compte-form" id="compteForm">
+    <form method="POST" action="{{ route('admin.comptes.store') }}" class="service-form" id="compteForm">
         @csrf
-
+        
         <!-- Section Informations Personnelles -->
         <div class="form-section">
             <h2><i class="fas fa-id-card"></i> Informations Personnelles</h2>
@@ -38,6 +44,7 @@
                                value="{{ old('matricule') }}" 
                                placeholder="Ex: MAT001" required>
                     </div>
+                    <small class="form-hint">Identifiant unique de l'agent</small>
                     @error('matricule')
                         <span class="error">{{ $message }}</span>
                     @enderror
@@ -47,7 +54,7 @@
                     <label for="profil_id">Profil *</label>
                     <div class="input-with-icon">
                         <i class="fas fa-user-tag"></i>
-                        <select id="profil_id" name="profil_id" required>
+                        <select id="profil_id" name="profil_id" class="form-select" required>
                             <option value="">Sélectionnez un profil</option>
                             @foreach($profils as $profil)
                                 <option value="{{ $profil->id }}" {{ old('profil_id') == $profil->id ? 'selected' : '' }}>
@@ -56,6 +63,11 @@
                             @endforeach
                         </select>
                     </div>
+                    <br>
+                      <a href="{{ route('admin.profils.create') }}" class="btn btn-primary">
+        <i class="fas fa-plus-circle"></i> Nouveau profil
+    </a>
+                    <small class="form-hint">Détermine les permissions de l'utilisateur</small>
                     @error('profil_id')
                         <span class="error">{{ $message }}</span>
                     @enderror
@@ -126,16 +138,32 @@
             <div class="form-row">
                 <div class="form-group">
                     <label for="service_id">Service</label>
-                    <div class="input-with-icon">
-                        <i class="fas fa-building"></i>
-                        <select id="service_id" name="service_id">
-                            <option value="">Sélectionnez un service</option>
-                            @foreach($services as $service)
-                                <option value="{{ $service->id }}" {{ old('service_id') == $service->id ? 'selected' : '' }}>
-                                    {{ $service->nom }}
-                                </option>
-                            @endforeach
-                        </select>
+                    <div class="search-container">
+                        <div class="input-with-icon">
+                            <i class="fas fa-search"></i>
+                            <input type="text" id="service_search" class="search-input" 
+                                   placeholder="Rechercher un service..." 
+                                   onkeyup="filterSelect('service_id', this.value)">
+                        </div>
+                        <div class="input-with-icon">
+                            <i class="fas fa-building"></i>
+                            <select id="service_id" name="service_id" class="form-select" size="5">
+                                <option value="">Sélectionnez un service</option>
+                                @foreach($services as $service)
+                                    <option value="{{ $service->id }}" {{ old('service_id') == $service->id ? 'selected' : '' }}>
+                                        {{ $service->nom }}
+                                    </option>
+                                @endforeach
+                            </select>
+                        </div>
+                        <div class="select-actions">
+                            <a href="{{ route('admin.services.index') }}" target="_blank" class="btn-action">
+                                <i class="fas fa-external-link-alt"></i> Voir tous les services
+                            </a>
+                            <a href="{{ route('admin.services.create') }}" target="_blank" class="btn-action">
+                                <i class="fas fa-plus"></i> Créer un nouveau service
+                            </a>
+                        </div>
                     </div>
                     @error('service_id')
                         <span class="error">{{ $message }}</span>
@@ -146,7 +174,7 @@
                     <label for="statut">Statut *</label>
                     <div class="input-with-icon">
                         <i class="fas fa-circle"></i>
-                        <select id="statut" name="statut" required>
+                        <select id="statut" name="statut" class="form-select" required>
                             <option value="actif" {{ old('statut') == 'actif' ? 'selected' : '' }}>
                                 Actif
                             </option>
@@ -313,51 +341,16 @@
         --success: #10b981;
         --danger: #ef4444;
         --warning: #f59e0b;
+        --card-bg: #ffffff;
+        --modal-overlay: rgba(0, 0, 0, 0.5);
     }
 
-    .create-compte-container {
+    .create-service-container {
         background: var(--white);
         border-radius: 20px;
         box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
         overflow: hidden;
         border: 1px solid rgba(0, 0, 0, 0.1);
-    }
-
-    .compte-header {
-        background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-dark) 100%);
-        color: var(--white);
-        padding: 40px;
-        text-align: center;
-        position: relative;
-        overflow: hidden;
-    }
-
-    .compte-header::before {
-        content: '';
-        position: absolute;
-        top: -50%;
-        left: -50%;
-        width: 200%;
-        height: 200%;
-        background: radial-gradient(circle, rgba(255, 255, 255, 0.1) 0%, transparent 70%);
-    }
-
-    .compte-header h1 {
-        font-size: 32px;
-        margin-bottom: 10px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        gap: 15px;
-        position: relative;
-        z-index: 1;
-    }
-
-    .compte-header p {
-        font-size: 16px;
-        opacity: 0.9;
-        position: relative;
-        z-index: 1;
     }
 
     .success-message {
@@ -375,7 +368,7 @@
         gap: 10px;
     }
 
-    .compte-form {
+    .service-form {
         padding: 40px;
     }
 
@@ -435,11 +428,12 @@
         left: 15px;
         color: var(--medium-gray);
         font-size: 16px;
-        z-index: 2;
+        z-index: 1;
     }
 
     .input-with-icon input,
-    .input-with-icon select {
+    .input-with-icon select,
+    .input-with-icon textarea {
         width: 100%;
         padding: 14px 14px 14px 45px;
         border: 2px solid var(--light-gray);
@@ -448,15 +442,85 @@
         transition: all 0.3s ease;
         background: var(--white);
         color: var(--black);
+        font-family: inherit;
+        position: relative;
+        z-index: 2;
     }
 
     .input-with-icon input:focus,
-    .input-with-icon select:focus {
+    .input-with-icon select:focus,
+    .input-with-icon textarea:focus {
         outline: none;
         border-color: var(--primary-color);
         box-shadow: 0 0 0 3px rgba(3, 81, 188, 0.1);
     }
 
+    .form-hint {
+        display: block;
+        margin-top: 8px;
+        font-size: 12px;
+        color: var(--medium-gray);
+        line-height: 1.4;
+    }
+
+    .error {
+        color: var(--danger);
+        font-size: 12px;
+        margin-top: 8px;
+        display: block;
+        font-weight: 500;
+    }
+
+    /* Search Container */
+    .search-container {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    .search-input {
+        width: 100%;
+        padding: 10px 10px 10px 40px;
+        border: 2px solid var(--light-gray);
+        border-radius: 8px;
+        font-size: 14px;
+        transition: all 0.3s ease;
+    }
+
+    .search-input:focus {
+        border-color: var(--primary-color);
+        box-shadow: 0 0 0 3px rgba(3, 81, 188, 0.1);
+        outline: none;
+    }
+
+    .select-actions {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+        margin-top: 5px;
+    }
+
+    .btn-action {
+        background: var(--light-gray);
+        color: var(--medium-gray);
+        padding: 8px 12px;
+        border-radius: 6px;
+        text-decoration: none;
+        font-size: 12px;
+        font-weight: 500;
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        transition: all 0.3s ease;
+    }
+
+    .btn-action:hover {
+        background: var(--primary-light);
+        color: var(--white);
+        transform: translateY(-1px);
+    }
+
+    /* Password Toggle */
     .password-toggle {
         position: absolute;
         right: 15px;
@@ -470,21 +534,6 @@
 
     .password-toggle:hover {
         color: var(--primary-color);
-    }
-
-    .form-hint {
-        display: block;
-        margin-top: 8px;
-        font-size: 12px;
-        color: var(--medium-gray);
-    }
-
-    .error {
-        color: var(--danger);
-        font-size: 12px;
-        margin-top: 8px;
-        display: block;
-        font-weight: 500;
     }
 
     /* Password Strength Indicator */
@@ -648,11 +697,70 @@
         transform: translateY(-2px);
     }
 
+    .btn-return {
+        background: var(--white);
+        color: var(--medium-gray);
+        padding: 10px 20px;
+        border: 2px solid var(--light-gray);
+        border-radius: 8px;
+        text-decoration: none;
+        font-weight: 600;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        transition: all 0.3s ease;
+        font-size: 14px;
+    }
+
+    .btn-return:hover {
+        background: var(--light-gray);
+        border-color: var(--medium-gray);
+        transform: translateY(-1px);
+    }
+
+    /* Amélioration des selects */
+    .form-select {
+        appearance: none;
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='%23333' viewBox='0 0 16 16'%3E%3Cpath d='M7.247 11.14 2.451 5.658C1.885 5.013 2.345 4 3.204 4h9.592a1 1 0 0 1 .753 1.659l-4.796 5.48a1 1 0 0 1-1.506 0z'/%3E%3C/svg%3E");
+        background-repeat: no-repeat;
+        background-position: right 15px center;
+        background-size: 16px;
+        padding-right: 45px;
+        cursor: pointer;
+    }
+
+    /* Style amélioré pour les selects avec scroll */
+    .form-select[multiple],
+    .form-select[size] {
+        height: auto;
+        min-height: 120px;
+        max-height: 200px;
+        overflow-y: auto;
+    }
+
+    .form-select option {
+        padding: 8px 12px;
+        border-bottom: 1px solid var(--light-gray);
+        cursor: pointer;
+    }
+
+    .form-select option:hover {
+        background-color: var(--light-gray);
+    }
+
+    .form-select option:checked {
+        background-color: var(--primary-light);
+        color: var(--white);
+    }
+
     /* Responsive */
     @media (max-width: 768px) {
-        .compte-header,
-        .compte-form {
+        .service-form {
             padding: 20px;
+        }
+
+        .success-message {
+            margin: 20px;
         }
 
         .form-section {
@@ -677,11 +785,21 @@
         .requirements-grid {
             grid-template-columns: 1fr;
         }
+
+        .select-actions {
+            flex-direction: column;
+        }
+
+        .btn-action {
+            width: 100%;
+            justify-content: center;
+        }
     }
 </style>
 @endpush
 
 @push('scripts')
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
     document.addEventListener('DOMContentLoaded', function() {
         const passwordInput = document.getElementById('password');
@@ -850,17 +968,61 @@
         form.addEventListener('submit', function(e) {
             if (!validateForm()) {
                 e.preventDefault();
-                alert('Veuillez corriger les erreurs dans le formulaire avant de soumettre.');
+                showAlert('Erreur de validation', 'Veuillez corriger les erreurs dans le formulaire avant de soumettre.', 'error');
+                return;
             }
+            
+            // Confirmation avant soumission
+            e.preventDefault();
+            
+            Swal.fire({
+                title: 'Confirmer la création',
+                text: 'Êtes-vous sûr de vouloir créer ce compte ?',
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonColor: '#0351BC',
+                cancelButtonColor: '#6c757d',
+                confirmButtonText: 'Oui, créer',
+                cancelButtonText: 'Annuler'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    // Désactiver le bouton pour éviter les doubles soumissions
+                    submitBtn.disabled = true;
+                    submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Création en cours...';
+                    
+                    // Soumettre le formulaire
+                    form.submit();
+                }
+            });
         });
-        
-        // Initialiser Select2
-        $('#profil_id, #service_id').select2({
-            theme: 'bootstrap-5',
-            width: '100%',
-            placeholder: 'Sélectionnez une option',
-            dropdownParent: $('.create-compte-container')
-        });
+
+        function showAlert(title, text, icon) {
+            Swal.fire({
+                title: title,
+                text: text,
+                icon: icon,
+                confirmButtonColor: '#0351BC',
+                confirmButtonText: 'OK'
+            });
+        }
     });
+
+    // Fonction pour filtrer les options des selects
+    function filterSelect(selectId, searchText) {
+        const select = document.getElementById(selectId);
+        const options = select.options;
+        searchText = searchText.toLowerCase();
+        
+        for (let i = 0; i < options.length; i++) {
+            const option = options[i];
+            const text = option.text.toLowerCase();
+            
+            if (text.includes(searchText) || searchText === '') {
+                option.style.display = '';
+            } else {
+                option.style.display = 'none';
+            }
+        }
+    }
 </script>
 @endpush

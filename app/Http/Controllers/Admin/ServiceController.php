@@ -4,41 +4,110 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Localisation;
-use App\Models\Utilisateur; // Changé de User à Utilisateur
+use App\Models\Utilisateur;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
 
 class ServiceController extends Controller
 {
-    /**
-     * UC-ADM-03 : Afficher la liste des services
-     */
-    public function index(Request $request)
-    {
-        $query = Localisation::where('type', 'service')
-            ->with(['parent', 'responsable'])
-            ->withCount('utilisateurs'); // Changé de 'users' à 'utilisateurs'
-        
-        if ($request->filled('search')) {
-            $query->where(function($q) use ($request) {
-                $q->where('nom', 'like', '%' . $request->search . '%')
-                  ->orWhere('description', 'like', '%' . $request->search . '%')
-                  ->orWhere('code_geographique', 'like', '%' . $request->search . '%');
-            });
-        }
-        
-        if ($request->filled('parent_id')) {
-            $query->where('parent_id', $request->parent_id);
-        }
-        
-        $services = $query->latest()->paginate(20);
-        
-        // Pour les filtres : récupérer uniquement les services
-        $servicesList = Localisation::where('type', 'service')->get();
-        
-        return view('admin.services.index', compact('services', 'servicesList'));
+  /**
+ * UC-ADM-03 : Afficher la liste des services
+ */
+public function index(Request $request)
+{
+    // Récupérer tous les types distincts pour le filtre
+    $allTypes = Localisation::select('type')
+        ->selectRaw('count(*) as count')
+        ->groupBy('type')
+        ->orderBy('type')
+        ->get()
+        ->pluck('count', 'type')
+        ->toArray();
+    
+    // Requête pour TOUTES les localisations (tous types)
+    $query = Localisation::with(['parent', 'responsable'])
+        ->withCount('utilisateurs');
+    
+    // Filtre par recherche
+    if ($request->filled('search')) {
+        $query->where(function($q) use ($request) {
+            $q->where('nom', 'like', '%' . $request->search . '%')
+              ->orWhere('description', 'like', '%' . $request->search . '%')
+              ->orWhere('code_geographique', 'like', '%' . $request->search . '%');
+        });
     }
+    
+    // Filtre par parent
+    if ($request->filled('parent_id')) {
+        $query->where('parent_id', $request->parent_id);
+    }
+    
+    // Filtre par type
+    if ($request->filled('type')) {
+        $query->where('type', $request->type);
+    }
+    
+    $localisations = $query->orderBy('type')->orderBy('nom')->paginate(20);
+    
+    // Pour les filtres : récupérer TOUTES les localisations
+    $allLocalisations = Localisation::orderBy('nom')->get();
+    
+    // Données pour les statistiques et graphiques
+    $statistics = $this->getStatisticsData();
+    
+    return view('admin.services.index', compact(
+        'localisations', 
+        'allLocalisations', 
+        'allTypes',
+        'statistics'
+    ));
+}
+
+/**
+ * Récupérer les données pour les statistiques et graphiques
+ */
+private function getStatisticsData()
+{
+    // Statistiques générales
+    $totalLocalisations = Localisation::count();
+    $totalWithResponsable = Localisation::whereNotNull('responsable_id')->count();
+    $totalWithChildren = Localisation::has('children')->count();
+    
+    // Répartition par type
+    $typesDistribution = Localisation::select('type')
+        ->selectRaw('count(*) as count')
+        ->groupBy('type')
+        ->orderBy('count', 'desc')
+        ->get()
+        ->pluck('count', 'type')
+        ->toArray();
+    
+    // Top 5 des localisations avec le plus d'utilisateurs
+    $topByUsers = Localisation::withCount('utilisateurs')
+        ->orderBy('utilisateurs_count', 'desc')
+        ->limit(5)
+        ->get();
+    
+    // Répartition hiérarchique
+    $hierarchyLevels = [
+        'racine' => Localisation::whereNull('parent_id')->count(),
+        'niveau_1' => Localisation::whereHas('parent', function($q) {
+            $q->whereNull('parent_id');
+        })->count(),
+        'niveau_2' => Localisation::whereHas('parent.parent')->count(),
+        'niveau_3' => Localisation::whereHas('parent.parent.parent')->count(),
+    ];
+    
+    return [
+        'total' => $totalLocalisations,
+        'with_responsable' => $totalWithResponsable,
+        'with_children' => $totalWithChildren,
+        'types_distribution' => $typesDistribution,
+        'top_by_users' => $topByUsers,
+        'hierarchy_levels' => $hierarchyLevels,
+    ];
+}
 
     /**
      * UC-ADM-03 : Afficher le formulaire de création
@@ -59,24 +128,29 @@ class ServiceController extends Controller
             'autre' => 'Autre (saisie libre)',
         ];
         
-        // Parent : uniquement les services déjà enregistrés
-        $parents = Localisation::where('type', 'service')
-            ->select('id', 'nom', 'parent_id')
-            ->orderBy('nom')
+        // Parent : Toutes les localisations existantes (tous types) triées par nom
+        $parents = Localisation::orderBy('nom')
             ->get()
             ->mapWithKeys(function ($item) {
                 $prefix = $item->parent_id ? '↳ ' : '';
-                return [$item->id => $prefix . $item->nom];
-            });
+                return [$item->id => $prefix . $item->nom . ' (' . $item->type . ')'];
+            })
+            ->toArray();
         
-        // Responsables : depuis la table users (Utilisateur model)
+        // Responsables : tous les utilisateurs actifs triés par nom/prénom
         $responsables = Utilisateur::where('statut', 'actif')
             ->orderBy('nom')
             ->orderBy('prenom')
             ->get()
             ->mapWithKeys(function ($user) {
-                return [$user->id => "{$user->nom} {$user->prenom} - {$user->matricule} ({$user->grade})"];
-            });
+                $nomComplet = trim($user->nom . ' ' . $user->prenom);
+                $label = "{$nomComplet} - {$user->matricule}";
+                if ($user->grade) {
+                    $label .= " ({$user->grade})";
+                }
+                return [$user->id => $label];
+            })
+            ->toArray();
         
         return view('admin.services.create', compact('types', 'parents', 'responsables'));
     }
@@ -92,7 +166,7 @@ class ServiceController extends Controller
             'nom' => 'required|max:255',
             'parent_id' => 'nullable|exists:localisations,id',
             'code_geographique' => 'nullable|max:50|unique:localisations,code_geographique',
-            'responsable_id' => 'nullable|exists:users,id', // Table users
+            'responsable_id' => 'nullable|exists:users,id',
             'adresse' => 'nullable|max:500',
             'telephone' => 'nullable|max:20',
             'description' => 'nullable',
@@ -112,6 +186,13 @@ class ServiceController extends Controller
             );
         }
         
+        // Vérifier qu'on ne crée pas de boucle dans la hiérarchie (pour création)
+        if ($validated['parent_id'] && $this->createsHierarchyLoopOnCreate($validated['parent_id'])) {
+            return redirect()->back()
+                ->with('error', 'Impossible de définir ce parent car cela créerait une boucle dans la hiérarchie.')
+                ->withInput();
+        }
+        
         DB::beginTransaction();
         
         try {
@@ -119,11 +200,11 @@ class ServiceController extends Controller
             
             // Log l'activité
             \App\Models\LogActivite::create([
-                'id_utilisateur' => auth()->id(), // Changé user_id à id_utilisateur
+                'id_utilisateur' => auth()->id(),
                 'date_heure' => now(),
                 'action' => 'creation_service',
                 'module' => 'administration',
-                'id_element' => $service->id, // Changé element_id à id_element
+                'id_element' => $service->id,
                 'adresse_ip' => $request->ip(),
                 'details' => "Création du {$service->type} : {$service->nom}",
                 'user_agent' => $request->userAgent(),
@@ -132,7 +213,7 @@ class ServiceController extends Controller
             DB::commit();
             
             return redirect()->route('admin.services.index')
-                ->with('success', "{$service->type} créé avec succès.");
+                ->with('success', ucfirst($service->type) . " créé avec succès.");
                 
         } catch (\Exception $e) {
             DB::rollBack();
@@ -157,11 +238,15 @@ class ServiceController extends Controller
             }
         ]);
         
+        // Créer des alias pour la vue
+        $service->personnel = $service->utilisateurs;
+        $service->sousServices = $service->children;
+        
         // Statistiques
         $statistiques = [
-            'total_utilisateurs' => $service->utilisateurs()->count(),
-            'total_enfants' => $service->children()->count(),
-            'derniers_utilisateurs' => $service->utilisateurs()
+            'total_personnel' => $service->utilisateurs()->count(),
+            'total_sous_services' => $service->children()->count(),
+            'dernieres_affectations' => $service->utilisateurs()
                 ->orderBy('utilisateur_service.date_affectation', 'desc')
                 ->limit(5)
                 ->get(),
@@ -189,25 +274,26 @@ class ServiceController extends Controller
             'autre' => 'Autre (saisie libre)',
         ];
         
-        // Parent : uniquement les services (sauf lui-même)
-        $parents = Localisation::where('type', 'service')
-            ->where('id', '!=', $service->id)
-            ->select('id', 'nom', 'parent_id')
+        // Parent : toutes les localisations (sauf lui-même et ses descendants)
+        $parents = Localisation::where('id', '!=', $service->id)
             ->orderBy('nom')
             ->get()
             ->mapWithKeys(function ($item) {
                 $prefix = $item->parent_id ? '↳ ' : '';
-                return [$item->id => $prefix . $item->nom];
-            });
+                return [$item->id => $prefix . $item->nom . ' (' . $item->type . ')'];
+            })
+            ->toArray();
         
-        // Responsables : depuis la table users (Utilisateur model)
+        // Responsables : tous les utilisateurs actifs
         $responsables = Utilisateur::where('statut', 'actif')
             ->orderBy('nom')
             ->orderBy('prenom')
             ->get()
             ->mapWithKeys(function ($user) {
-                return [$user->id => "{$user->nom} {$user->prenom} - {$user->matricule} ({$user->grade})"];
-            });
+                $nomComplet = trim($user->nom . ' ' . $user->prenom);
+                return [$user->id => "{$nomComplet} - {$user->matricule}" . ($user->grade ? " ({$user->grade})" : '')];
+            })
+            ->toArray();
         
         // Déterminer si c'est un type personnalisé
         $isCustomType = !in_array($service->type, array_keys($types));
@@ -246,8 +332,8 @@ class ServiceController extends Controller
         }
         unset($validated['type_custom']);
         
-        // Vérifier qu'on ne crée pas de boucle dans la hiérarchie
-        if ($validated['parent_id'] && $this->createsHierarchyLoop($service, $validated['parent_id'])) {
+        // Vérifier qu'on ne crée pas de boucle dans la hiérarchie (pour édition)
+        if ($validated['parent_id'] && $this->createsHierarchyLoopOnUpdate($service, $validated['parent_id'])) {
             return redirect()->back()
                 ->with('error', 'Impossible de définir ce parent car cela créerait une boucle dans la hiérarchie.')
                 ->withInput();
@@ -273,7 +359,7 @@ class ServiceController extends Controller
             DB::commit();
             
             return redirect()->route('admin.services.index')
-                ->with('success', "{$service->type} mis à jour avec succès.");
+                ->with('success', ucfirst($service->type) . " mis à jour avec succès.");
                 
         } catch (\Exception $e) {
             DB::rollBack();
@@ -321,7 +407,7 @@ class ServiceController extends Controller
             DB::commit();
             
             return redirect()->route('admin.services.index')
-                ->with('success', "{$service->type} supprimé avec succès.");
+                ->with('success', ucfirst($service->type) . " supprimé avec succès.");
                 
         } catch (\Exception $e) {
             DB::rollBack();
@@ -491,32 +577,66 @@ class ServiceController extends Controller
     /**
      * UC-ADM-03 : Exporter la liste des services
      */
-    public function export()
-    {
-        $services = Localisation::with(['parent', 'responsable'])
+   public function export()
+{
+    // Test 1: Vérifiez si la méthode est appelée
+    \Log::info('=== EXPORT METHOD CALLED ===');
+    
+    // Test 2: Réponse simple pour test
+    if (request()->get('test') == 'simple') {
+        return response('Export test - OK', 200);
+    }
+    
+    // Test 3: Vérifiez l'authentification
+    if (!auth()->check()) {
+        \Log::error('User not authenticated for export');
+        abort(403, 'Non authentifié');
+    }
+    
+    \Log::info('User authenticated: ' . auth()->user()->email);
+    
+    // Test 4: Vérifiez le modèle Localisation
+    try {
+        $count = Localisation::count();
+        \Log::info('Localisation count: ' . $count);
+    } catch (\Exception $e) {
+        \Log::error('Localisation model error: ' . $e->getMessage());
+        return response()->json([
+            'error' => 'Modèle Localisation non trouvé',
+            'message' => $e->getMessage()
+        ], 500);
+    }
+    
+    // Test 5: Export simplifié
+    try {
+        $services = Localisation::select('type', 'nom', 'code_geographique', 'telephone', 'adresse', 'description')
             ->orderBy('type')
             ->orderBy('nom')
             ->get();
+            
+        \Log::info('Services found: ' . $services->count());
+        
+        $filename = 'services_' . date('Y-m-d') . '.csv';
         
         $headers = [
-            'Content-Type' => 'text/csv',
-            'Content-Disposition' => 'attachment; filename="services_' . date('Y-m-d') . '.csv"',
+            'Content-Type' => 'text/csv; charset=utf-8',
+            'Content-Disposition' => 'attachment; filename="' . $filename . '"',
         ];
         
         $callback = function() use ($services) {
             $file = fopen('php://output', 'w');
-            fputcsv($file, ['Type', 'Nom', 'Code Géographique', 'Parent', 'Responsable', 'Téléphone', 'Adresse', 'Description']);
+            
+            // En-têtes simplifiées
+            fputcsv($file, ['Type', 'Nom', 'Code', 'Téléphone', 'Adresse', 'Description']);
             
             foreach ($services as $service) {
                 fputcsv($file, [
-                    $service->type,
-                    $service->nom,
-                    $service->code_geographique,
-                    $service->parent->nom ?? 'N/A',
-                    $service->responsable ? $service->responsable->nom . ' ' . $service->responsable->prenom : 'N/A',
-                    $service->telephone,
-                    $service->adresse,
-                    $service->description,
+                    $service->type ?? '',
+                    $service->nom ?? '',
+                    $service->code_geographique ?? '',
+                    $service->telephone ?? '',
+                    $service->adresse ?? '',
+                    $service->description ?? '',
                 ]);
             }
             
@@ -524,8 +644,17 @@ class ServiceController extends Controller
         };
         
         return response()->stream($callback, 200, $headers);
+        
+    } catch (\Exception $e) {
+        \Log::error('Export CSV error: ' . $e->getMessage());
+        \Log::error('Trace: ' . $e->getTraceAsString());
+        
+        return response()->json([
+            'error' => 'Erreur CSV',
+            'message' => $e->getMessage()
+        ], 500);
     }
-
+}
     /**
      * Générer un code géographique automatique
      */
@@ -540,20 +669,59 @@ class ServiceController extends Controller
     }
 
     /**
-     * Vérifier si la hiérarchie crée une boucle
+     * Vérifier si la hiérarchie crée une boucle pour une création
      */
-    private function createsHierarchyLoop(Localisation $service, $parentId)
+    private function createsHierarchyLoopOnCreate($parentId)
     {
+        if (!$parentId) {
+            return false;
+        }
+        
+        // Vérifier les boucles dans la hiérarchie existante
+        $checkedIds = [];
+        $current = Localisation::find($parentId);
+        
+        while ($current) {
+            if (in_array($current->id, $checkedIds)) {
+                return true; // Boucle détectée
+            }
+            $checkedIds[] = $current->id;
+            $current = $current->parent;
+        }
+        
+        return false;
+    }
+
+    /**
+     * Vérifier si la hiérarchie crée une boucle pour une mise à jour
+     */
+    private function createsHierarchyLoopOnUpdate(Localisation $service, $parentId)
+    {
+        if (!$parentId) {
+            return false;
+        }
+        
+        // Vérifier qu'on ne se référence pas soi-même
         if ($parentId == $service->id) {
             return true;
         }
         
-        $parent = Localisation::find($parentId);
-        while ($parent) {
-            if ($parent->parent_id == $service->id) {
+        // Vérifier les boucles dans la hiérarchie
+        $checkedIds = [$service->id];
+        $current = Localisation::find($parentId);
+        
+        while ($current) {
+            if (in_array($current->id, $checkedIds)) {
                 return true;
             }
-            $parent = $parent->parent;
+            $checkedIds[] = $current->id;
+            
+            // Si on trouve le service dans la chaîne parentale
+            if ($current->parent_id == $service->id) {
+                return true;
+            }
+            
+            $current = $current->parent;
         }
         
         return false;

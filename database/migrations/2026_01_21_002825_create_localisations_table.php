@@ -11,7 +11,7 @@ return new class extends Migration
         Schema::create('localisations', function (Blueprint $table) {
             $table->id();
 
-            $table->string('type'); // site, batiment, service, salle...
+            $table->string('type'); 
             $table->string('nom');
 
             // hiérarchie interne OK

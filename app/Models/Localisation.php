@@ -41,10 +41,11 @@ class Localisation extends Model
 
     /**
      * Responsable du service / localisation
+     * CORRECTION : Utilisateur pointe vers la table 'users'
      */
     public function responsable(): BelongsTo
     {
-        return $this->belongsTo(Utilisateur::class, 'responsable_id');
+        return $this->belongsTo(\App\Models\Utilisateur::class, 'responsable_id');
     }
 
     /**
@@ -53,10 +54,10 @@ class Localisation extends Model
     public function utilisateurs(): BelongsToMany
     {
         return $this->belongsToMany(
-            Utilisateur::class,
+            \App\Models\Utilisateur::class,
             'utilisateur_service',
-            'service_id',      // FK vers localisations.id
-            'utilisateur_id'   // FK vers users.id
+            'service_id',
+            'utilisateur_id'
         )
         ->withPivot('date_affectation', 'fonction_service')
         ->withTimestamps();
