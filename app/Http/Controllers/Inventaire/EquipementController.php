@@ -11,6 +11,7 @@ use App\Models\ContratMaintenance;
 use App\Models\HistoriqueMouvement;
 use App\Models\LogActivite;
 use Illuminate\Http\Request;
+use Barryvdh\Snappy\Facades\SnappyPdf;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use SimpleSoftwareIO\QrCode\Facades\QrCode;
@@ -430,22 +431,51 @@ class EquipementController extends Controller
     }
 
     /**
-     * UC-INV-06 : Générer une étiquette code-barres
+     * UC-INV-06 : Générer une étiquette code-barres 
      */
-    public function genererEtiquette(Equipement $equipement)
-    {
-        // Générer le QR code
-        $qrCode = QrCode::format('png')
-            ->size(200)
-            ->generate($equipement->code_barres);
 
-        $pdf = Pdf::loadView('inventaire.equipements.etiquette', [
-            'equipement' => $equipement,
-            'qrCode' => base64_encode($qrCode)
-        ]);
+public function genererEtiquette(Equipement $equipement)
+{
+    // Charger les relations
+    $equipement->load(['typeEquipement', 'localisation', 'serviceResponsable', 'fournisseur']);
+    
+    // QR Code = URL directe vers la page de scan
+    $qrContent = route('inventaire.equipements.scan', $equipement->code_barres);
+    
+    // Générer le QR code
+    $qrSvg = QrCode::format('svg')
+        ->size(300)
+        ->margin(1)
+        ->errorCorrection('H')
+        ->generate($qrContent);
 
-        return $pdf->download('etiquette_' . $equipement->numero_inventaire . '.pdf');
-    }
+    $qrCodeBase64 = 'data:image/svg+xml;base64,' . base64_encode($qrSvg);
+
+    $data = [
+        'equipement'     => $equipement,
+        'qrCode'         => $qrCodeBase64,
+        'dateGeneration' => now()->format('d/m/Y H:i'),
+        'generateur'     => auth()->user()->name ?? 'Système',
+    ];
+
+    return Pdf::loadView('inventaire.equipements.etiquette', $data)
+        ->setPaper('a5', 'portrait')
+        ->download('etiquette_' . $equipement->numero_inventaire . '.pdf');
+}
+
+
+/**
+ * Page de scan QR - Affiche les infos de l'équipement
+ */
+public function scanQR($code)
+{
+    $equipement = Equipement::where('code_barres', $code)
+        ->orWhere('numero_inventaire', $code)
+        ->with(['typeEquipement', 'localisation', 'serviceResponsable', 'fournisseur'])
+        ->firstOrFail();
+    
+    return view('inventaire.equipements.scan', compact('equipement'));
+}
 
     /**
      * Export CSV

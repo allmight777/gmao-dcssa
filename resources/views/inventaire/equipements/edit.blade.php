@@ -8,7 +8,7 @@
 @section('page-actions')
 <a href="{{ route('inventaire.equipements.show', $equipement) }}" class="btn-action">
     <i class="fas fa-eye"></i> Voir
-</a>
+</a> &nbsp &nbsp
 <a href="{{ route('inventaire.equipements.index') }}" class="btn-return">
     <i class="fas fa-arrow-left"></i> Retour
 </a>

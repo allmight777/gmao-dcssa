@@ -8,10 +8,10 @@
 @section('page-actions')
 <a href="{{ route('inventaire.equipements.edit', $equipement) }}" class="btn-action">
     <i class="fas fa-edit"></i> Modifier
-</a>
+</a> &nbsp &nbsp
 <a href="{{ route('inventaire.equipements.genererEtiquette', $equipement) }}" class="btn-action" target="_blank">
     <i class="fas fa-qrcode"></i> Étiquette
-</a>
+</a> &nbsp &nbsp
 <a href="{{ route('inventaire.equipements.index') }}" class="btn-return">
     <i class="fas fa-arrow-left"></i> Retour
 </a>
@@ -108,9 +108,7 @@
             <div class="card-body">
                 <div class="indicators-grid">
                     <div class="indicator {{ $indicateurs['age'] > 5 ? 'warning' : 'success' }}">
-                        <div class="indicator-icon">
-                            <i class="fas fa-birthday-cake"></i>
-                        </div>
+                      
                         <div class="indicator-content">
                             <h4>Âge</h4>
                             <p>{{ $indicateurs['age'] }} an(s)</p>
@@ -132,9 +130,7 @@
                     
                     @if($indicateurs['temps_restant_vie'])
                         <div class="indicator {{ $indicateurs['temps_restant_vie'] < 12 ? 'warning' : 'success' }}">
-                            <div class="indicator-icon">
-                                <i class="fas fa-hourglass-half"></i>
-                            </div>
+                          
                             <div class="indicator-content">
                                 <h4>Vie restante</h4>
                                 <p>{{ $indicateurs['temps_restant_vie'] }} mois</p>

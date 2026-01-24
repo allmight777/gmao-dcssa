@@ -172,6 +172,9 @@ Route::middleware('auth')->group(function () {
         // Route pour le tableau de bord inventaire
         Route::get('/dashboard', [InventaireController::class, 'dashboard'])->name('dashboard');
     });
+
+    // Route publique pour scanner les équipements
+Route::get('/scan/{code}', [EquipementController::class, 'scanQR'])->name('inventaire.equipements.scan');
 });
 
 // Redirection racine
