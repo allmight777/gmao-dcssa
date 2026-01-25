@@ -36,12 +36,16 @@ class InventaireController extends Controller
             ->limit(10)
             ->get();
         
-        // Équipements par type
-        $equipements_par_type = Equipement::select('type_equipement', DB::raw('count(*) as total'))
-            ->groupBy('type_equipement')
-            ->orderBy('total', 'desc')
-            ->limit(5)
-            ->get();
+// Équipements par type (avec libellé)
+$equipements_par_type = DB::table('equipements')
+    ->join('type_equipements', 'equipements.type_equipement_id', '=', 'type_equipements.id')
+    ->select('type_equipements.libelle as type', DB::raw('count(equipements.id) as total'))
+    ->groupBy('type_equipements.libelle')
+    ->orderByDesc('total')
+    ->limit(5)
+    ->get();
+
+
             
         // Équipements par état
         $equipements_par_etat = Equipement::select('etat', DB::raw('count(*) as total'))

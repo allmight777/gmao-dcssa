@@ -175,7 +175,8 @@
                                         <strong>{{ $equipement->numero_inventaire }}</strong>
                                     </td>
                                     <td>{{ $equipement->marque }} {{ $equipement->modele }}</td>
-                                    <td>{{ $equipement->type_equipement }}</td>
+                                   <td>{{ $equipement->type->libelle ?? 'Non défini' }}</td>
+
                                     <td>{{ $equipement->localisation->nom ?? 'Non affecté' }}</td>
                                     <td>{{ $equipement->created_at->format('d/m/Y') }}</td>
                                     <td>
@@ -212,7 +213,8 @@
                     <ul class="list-group list-group-flush">
                         @foreach($equipements_par_type as $type)
                         <li class="list-group-item d-flex justify-content-between align-items-center">
-                            {{ $type->type_equipement }}
+                         {{ $type->type }}
+
                             <span class="badge bg-primary rounded-pill">{{ $type->total }}</span>
                         </li>
                         @endforeach
