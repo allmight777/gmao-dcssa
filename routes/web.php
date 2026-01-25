@@ -177,5 +177,9 @@ Route::middleware('auth')->group(function () {
 Route::get('/scan/{code}', [EquipementController::class, 'scanQR'])->name('inventaire.equipements.scan');
 });
 
+Route::get('/medDashboard', function () {
+    return view('welcome');
+});
+
 // Redirection racine
-Route::redirect('/', '/dashboard');
+Route::redirect('/', '/medDashboard');
