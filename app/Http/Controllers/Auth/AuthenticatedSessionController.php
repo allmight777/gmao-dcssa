@@ -16,6 +16,11 @@ class AuthenticatedSessionController extends Controller
      */
     public function create(): View
     {
+        // Si l'utilisateur est déjà connecté, le rediriger
+        if (Auth::check()) {
+            return $this->redirectUser(Auth::user());
+        }
+
         return view('auth.login');
     }
 
@@ -28,7 +33,38 @@ class AuthenticatedSessionController extends Controller
 
         $request->session()->regenerate();
 
-        return redirect()->intended(route('dashboard', absolute: false));
+        // Récupérer l'utilisateur authentifié
+        $user = Auth::user();
+
+        // Vérifier si le compte est actif
+        if ($user->statut !== 'actif') {
+            Auth::logout();
+            return back()->withErrors([
+                'login' => 'Votre compte est ' . $user->statut . '. Veuillez contacter l\'administrateur.',
+            ]);
+        }
+
+        // Mettre à jour la date de dernière connexion
+        $user->date_derniere_connexion = now();
+        $user->save();
+
+        // Redirection en fonction du profil
+        return $this->redirectUser($user);
+    }
+
+    /**
+     * Redirige l'utilisateur en fonction de son profil
+     */
+    private function redirectUser($user): RedirectResponse
+    {
+        // Vérifier le profil de l'utilisateur
+        if ($user->profil_id == 5) {
+            // Utilisateur simple
+            return redirect()->route('UserSimleDashboard');
+        } else {
+            // Administrateurs et autres profils
+            return redirect()->intended(route('dashboard', absolute: false));
+        }
     }
 
     /**
@@ -41,6 +77,6 @@ class AuthenticatedSessionController extends Controller
         $request->session()->invalidate();
         $request->session()->regenerateToken();
 
-        return redirect('/');
+        return redirect('/')->with('status', 'Vous avez été déconnecté avec succès.');
     }
 }

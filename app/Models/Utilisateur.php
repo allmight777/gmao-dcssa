@@ -15,7 +15,7 @@ class Utilisateur extends Authenticatable
 
     // Table associée
     protected $table = 'users';
-    
+
     protected $fillable = [
         'matricule',
         'nom',
@@ -85,7 +85,7 @@ class Utilisateur extends Authenticatable
     public function getBadgeProfilAttribute()
     {
         $nomProfil = strtolower($this->nom_profil);
-        
+
         $classes = [
             'admin' => 'badge-admin',
             'administrateur' => 'badge-admin',
@@ -96,9 +96,9 @@ class Utilisateur extends Authenticatable
             'utilisateur' => 'badge-secondary',
             'default' => 'badge-secondary'
         ];
-        
+
         $key = $classes[$nomProfil] ?? $classes['default'];
-        
+
         // Retourne les classes sans le préfixe 'badge-'
         return str_replace('badge-', '', $key);
     }
@@ -115,7 +115,7 @@ class Utilisateur extends Authenticatable
             'bloque' => 'warning',
             'default' => 'secondary'
         ];
-        
+
         return $classes[strtolower($this->statut)] ?? $classes['default'];
     }
 
@@ -195,4 +195,39 @@ class Utilisateur extends Authenticatable
               ->orWhere('email', 'like', "%$term%");
         });
     }
+
+    // Dans App\Models\Utilisateur.php, ajoutez :
+
+/**
+ * Vérifie si l'utilisateur est chef de division
+ */
+public function isChefDivision(): bool
+{
+    // Vérifier si l'utilisateur est responsable d'une localisation
+    return Localisation::where('responsable_id', $this->id)->exists();
+}
+
+/**
+ * Récupère les localisations dont l'utilisateur est responsable
+ */
+public function localisationsResponsable()
+{
+    return $this->hasMany(Localisation::class, 'responsable_id');
+}
+
+/**
+ * Récupère le service principal dont l'utilisateur est responsable
+ */
+public function serviceResponsable()
+{
+    return $this->hasOne(Localisation::class, 'responsable_id');
+}
+
+/**
+ * Vérifie si l'utilisateur peut voir toutes les demandes du service
+ */
+public function canViewServiceDemandes(): bool
+{
+    return $this->isChefDivision() || $this->isAdmin() || $this->isGestionnaireInventaire();
+}
 }

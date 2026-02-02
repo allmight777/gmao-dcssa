@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use App\Models\Intervention;
 
 class Equipement extends Model
 {
@@ -17,7 +18,7 @@ class Equipement extends Model
         'numero_serie',
         'marque',
         'modele',
-        'type_equipement_id', 
+        'type_equipement_id',
         'classe_equipement',
         'date_achat',
         'date_mise_service',
@@ -125,4 +126,15 @@ class Equipement extends Model
         $random = strtoupper(substr(md5(uniqid()), 0, 6));
         return $prefix . $timestamp . $random;
     }
+
+
+public function interventions()
+{
+    return $this->hasMany(
+        Intervention::class,
+        'ID_Equipement_Controle',
+        'id'
+    );
+}
+
 }
