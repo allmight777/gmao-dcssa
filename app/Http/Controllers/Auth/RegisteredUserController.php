@@ -3,119 +3,60 @@
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
-use App\Http\Requests\Auth\LoginRequest;
-use Illuminate\Http\RedirectResponse;
+use App\Models\Utilisateur;
+use App\Models\Localisation;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Log;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\View\View;
 
-class AuthenticatedSessionController extends Controller
+class RegisteredUserController extends Controller
 {
     /**
-     * Affiche la page de login.
+     * Affiche la page d'inscription
      */
     public function create(): View
     {
-        // Vérifier si l'utilisateur est déjà connecté
-        if (Auth::check()) {
-            return $this->redirectBasedOnProfile(Auth::user());
-        }
+        $services = Localisation::where('type', 'service')
+            ->orderBy('nom')
+            ->get();
 
-        return view('auth.login');
+        return view('auth.register', compact('services'));
     }
 
     /**
-     * Traite la requête d'authentification.
+     * Crée un nouvel utilisateur
      */
-    public function store(LoginRequest $request): RedirectResponse
+    public function store(Request $request): RedirectResponse
     {
-        try {
-            $request->authenticate();
-            $request->session()->regenerate();
+        $request->validate([
+            'nom' => 'required|string|max:255',
+            'prenom' => 'required|string|max:255',
+            'matricule' => 'required|string|max:50|unique:users',
+            'login' => 'required|string|max:50|unique:users',
+            'email' => 'required|email|unique:users',
+            'password' => 'required|min:8|confirmed',
+            'service_id' => 'required|exists:localisations,id',
+            'telephone' => 'nullable|string|max:20',
+        ]);
 
-            // Récupérer l'utilisateur authentifié
-            $user = Auth::user();
+        // Créer l'utilisateur
+        $user = Utilisateur::create([
+            'nom' => $request->nom,
+            'prenom' => $request->prenom,
+            'matricule' => $request->matricule,
+            'login' => $request->login,
+            'email' => $request->email,
+            'password' => $request->password,
+            'telephone' => $request->telephone,
+            'service_id' => $request->service_id,
+            'fonction' => 'Utilisateur', // Valeur par défaut
+            'statut' => 'actif',
+            'profil_id' => $request->profil_id ?? 5,
+        ]);
 
-            // Vérifier si le compte est actif
-            if ($user->statut !== 'actif') {
-                Auth::logout();
-                return back()->withErrors([
-                    'login' => 'Votre compte est ' . $user->statut . '. Veuillez contacter l\'administrateur.',
-                ]);
-            }
+        Auth::login($user);
 
-            // Mettre à jour la date de dernière connexion
-            $user->date_derniere_connexion = now();
-            $user->save();
-
-            // Log de la connexion
-            Log::info('Connexion utilisateur', [
-                'user_id' => $user->id,
-                'matricule' => $user->matricule,
-                'profil' => $user->profil_id,
-                'ip' => $request->ip()
-            ]);
-
-            // Redirection en fonction du profil
-            return $this->redirectBasedOnProfile($user);
-
-        } catch (\Exception $e) {
-            Log::error('Erreur lors de l\'authentification', [
-                'error' => $e->getMessage(),
-                'login' => $request->login,
-                'ip' => $request->ip()
-            ]);
-
-            return back()->withErrors([
-                'login' => 'Une erreur est survenue lors de la connexion.',
-            ]);
-        }
-    }
-
-    /**
-     * Redirige l'utilisateur en fonction de son profil
-     */
-    private function redirectBasedOnProfile($user): RedirectResponse
-    {
-        // Définir les routes pour chaque profil
-        $profileRoutes = [
-            1 => 'dashboard', // Administrateur
-            2 => 'inventaire.dashboard', // Gestionnaire d'inventaire
-            3 => 'inventaire.dashboard', // Magasinier
-            4 => 'inventaire.dashboard', // Technicien
-            5 => 'UserSimleDashboard', // Utilisateur simple
-            6 => 'dashboard', // Responsable
-            7 => 'dashboard', // Superviseur
-            8 => 'dashboard', // Intervenant externe
-        ];
-
-        // Obtenir la route correspondante au profil
-        $route = $profileRoutes[$user->profil_id] ?? 'dashboard';
-
-        // Rediriger vers la route appropriée
-        return redirect()->route($route);
-    }
-
-    /**
-     * Déconnecte l'utilisateur.
-     */
-    public function destroy(Request $request): RedirectResponse
-    {
-        $user = Auth::user();
-
-        if ($user) {
-            // Log de la déconnexion
-            Log::info('Déconnexion utilisateur', [
-                'user_id' => $user->id,
-                'matricule' => $user->matricule
-            ]);
-        }
-
-        Auth::guard('web')->logout();
-        $request->session()->invalidate();
-        $request->session()->regenerateToken();
-
-        return redirect('/')->with('status', 'Vous avez été déconnecté avec succès.');
+        return redirect()->route('UserSimleDashboard');
     }
 }
