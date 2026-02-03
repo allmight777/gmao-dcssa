@@ -41,8 +41,9 @@ class HistoriqueMouvement extends Model
         return $this->belongsTo(Localisation::class, 'nouvelle_localisation_id');
     }
 
+
     public function operateur()
-    {
-        return $this->belongsTo(User::class, 'operateur_id');
-    }
+{
+    return $this->belongsTo(Utilisateur::class, 'operateur_id');
+}
 }

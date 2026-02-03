@@ -230,4 +230,21 @@ public function canViewServiceDemandes(): bool
 {
     return $this->isChefDivision() || $this->isAdmin() || $this->isGestionnaireInventaire();
 }
+
+/**
+ * Les mouvements effectués par cet utilisateur
+ */
+public function historiqueMouvements()
+{
+    return $this->hasMany(HistoriqueMouvement::class, 'operateur_id');
+}
+
+/**
+ * Les logs d'activité de cet utilisateur
+ */
+public function logsActivite()
+{
+    return $this->hasMany(LogActivite::class, 'id_utilisateur');
+}
+
 }

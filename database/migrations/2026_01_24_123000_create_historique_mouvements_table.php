@@ -10,12 +10,12 @@ return new class extends Migration
     {
         Schema::create('historique_mouvements', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('equipement_id')->constrained('equipements');
+            $table->foreignId('equipement_id')->constrained('equipements')->onDelete('cascade');
             $table->dateTime('date_mouvement');
-            $table->foreignId('ancienne_localisation_id')->nullable()->constrained('localisations');
-            $table->foreignId('nouvelle_localisation_id')->constrained('localisations');
+            $table->foreignId('ancienne_localisation_id')->nullable()->constrained('localisations')->onDelete('set null');
+            $table->foreignId('nouvelle_localisation_id')->nullable()->constrained('localisations')->onDelete('set null'); 
             $table->string('motif');
-            $table->foreignId('operateur_id')->constrained('users');
+            $table->foreignId('operateur_id')->constrained('users')->onDelete('cascade');
             $table->text('commentaire')->nullable();
             $table->timestamps();
         });

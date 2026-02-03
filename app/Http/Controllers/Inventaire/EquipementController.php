@@ -177,7 +177,7 @@ class EquipementController extends Controller
 
         } catch (\Exception $e) {
             DB::rollBack();
-            
+
             return redirect()->back()
                 ->with('error', 'Erreur lors de la création : ' . $e->getMessage())
                 ->withInput();
@@ -244,81 +244,152 @@ class EquipementController extends Controller
     /**
      * UC-INV-02 : Mettre à jour un équipement
      */
-    public function update(Request $request, Equipement $equipement)
-    {
-        $validated = $request->validate([
-            'numero_inventaire' => 'required|unique:equipements,numero_inventaire,' . $equipement->id . '|max:50',
-            'numero_serie' => 'nullable|max:100',
-            'marque' => 'required|max:100',
-            'modele' => 'required|max:100',
-            'type_equipement_id' => 'required|exists:type_equipements,id',
-            'classe_equipement' => 'nullable|max:50',
-            'date_achat' => 'required|date',
-            'date_mise_service' => 'nullable|date|after_or_equal:date_achat',
-            'prix_achat' => 'nullable|numeric|min:0',
-            'duree_vie_theorique' => 'nullable|integer|min:0',
-            'duree_garantie' => 'nullable|integer|min:0',
-            'etat' => 'required|in:neuf,bon,moyen,mauvais,hors_service',
-            'type_maintenance' => 'required|in:preventive,curative,mixte',
-            'localisation_id' => 'nullable|exists:localisations,id',
-            'service_responsable_id' => 'nullable|exists:localisations,id',
-            'fournisseur_id' => 'nullable|exists:fournisseurs,id',
-            'contrat_id' => 'nullable|exists:contrats_maintenance,id',
-            'commentaires' => 'nullable',
-            'date_reforme' => 'nullable|date|after_or_equal:date_achat',
-            'code_barres' => 'nullable|unique:equipements,code_barres,' . $equipement->id . '|max:100',
-        ]);
+public function update(Request $request, Equipement $equipement)
+{
+    $validated = $request->validate([
+        'numero_inventaire' => 'required|unique:equipements,numero_inventaire,' . $equipement->id . '|max:50',
+        'numero_serie' => 'nullable|max:100',
+        'marque' => 'required|max:100',
+        'modele' => 'required|max:100',
+        'type_equipement_id' => 'required|exists:type_equipements,id',
+        'classe_equipement' => 'nullable|max:50',
+        'date_achat' => 'required|date',
+        'date_mise_service' => 'nullable|date|after_or_equal:date_achat',
+        'prix_achat' => 'nullable|numeric|min:0',
+        'duree_vie_theorique' => 'nullable|integer|min:0',
+        'duree_garantie' => 'nullable|integer|min:0',
+        'etat' => 'required|in:neuf,bon,moyen,mauvais,hors_service',
+        'type_maintenance' => 'required|in:preventive,curative,mixte',
+        'localisation_id' => 'nullable|exists:localisations,id',
+        'service_responsable_id' => 'nullable|exists:localisations,id',
+        'fournisseur_id' => 'nullable|exists:fournisseurs,id',
+        'contrat_id' => 'nullable|exists:contrats_maintenance,id',
+        'commentaires' => 'nullable',
+        'date_reforme' => 'nullable|date|after_or_equal:date_achat',
+        'code_barres' => 'nullable|unique:equipements,code_barres,' . $equipement->id . '|max:100',
+    ]);
 
-        DB::beginTransaction();
+    DB::beginTransaction();
 
-        try {
-            // Vérifier si la localisation a changé
-            $ancienneLocalisation = $equipement->localisation_id;
-            $nouvelleLocalisation = $validated['localisation_id'] ?? null;
+    try {
+        // Récupérer les anciennes valeurs AVANT la mise à jour
+        $ancienneLocalisationId = $equipement->localisation_id;
+        $nouvelleLocalisationId = $validated['localisation_id'] ?? null;
 
-            // Ajouter l'utilisateur qui modifie
-            $validated['updated_by'] = auth()->id();
+        $ancienServiceResponsableId = $equipement->service_responsable_id;
+        $nouveauServiceResponsableId = $validated['service_responsable_id'] ?? null;
 
-            $equipement->update($validated);
+        // Ajouter l'utilisateur qui modifie
+        $validated['updated_by'] = auth()->id();
 
-            // Si la localisation a changé, enregistrer le mouvement
-            if ($ancienneLocalisation != $nouvelleLocalisation) {
-                HistoriqueMouvement::create([
-                    'equipement_id' => $equipement->id,
-                    'date_mouvement' => now(),
-                    'ancienne_localisation_id' => $ancienneLocalisation,
-                    'nouvelle_localisation_id' => $nouvelleLocalisation,
-                    'motif' => 'Modification fiche équipement',
-                    'operateur_id' => auth()->id(),
-                    'commentaire' => 'Changement de localisation via modification'
-                ]);
+        // Mettre à jour l'équipement
+        $equipement->update($validated);
+
+        // ============================================
+        // TRACKER LE CHANGEMENT DE LOCALISATION
+        // ============================================
+        if ($ancienneLocalisationId != $nouvelleLocalisationId) {
+
+            // Déterminer le motif détaillé
+            $motifDetail = '';
+            if ($ancienneLocalisationId === null && $nouvelleLocalisationId !== null) {
+                $motifDetail = 'Affectation initiale de localisation';
+            } elseif ($ancienneLocalisationId !== null && $nouvelleLocalisationId === null) {
+                $motifDetail = 'Retrait de localisation';
+            } else {
+                $motifDetail = 'Changement de localisation';
             }
 
-            // Log de l'activité
-            LogActivite::create([
-                'id_utilisateur' => auth()->id(),
-                'date_heure' => now(),
-                'action' => 'modification_equipement',
-                'module' => 'inventaire',
-                'id_element' => $equipement->id,
-                'adresse_ip' => $request->ip(),
-                'details' => "Modification de l'équipement {$equipement->numero_inventaire}",
-                'user_agent' => $request->userAgent(),
+            $mouvementLocalisation = HistoriqueMouvement::create([
+                'equipement_id' => $equipement->id,
+                'date_mouvement' => now(),
+                'ancienne_localisation_id' => $ancienneLocalisationId,
+                'nouvelle_localisation_id' => $nouvelleLocalisationId,
+                'motif' => $motifDetail,
+                'operateur_id' => auth()->id(),
+                'commentaire' => sprintf(
+                    'Modification localisation physique - Passage de %s à %s',
+                    $ancienneLocalisationId ? "localisation #{$ancienneLocalisationId}" : 'Aucune localisation',
+                    $nouvelleLocalisationId ? "localisation #{$nouvelleLocalisationId}" : 'Aucune localisation'
+                )
             ]);
 
-            DB::commit();
-
-            return redirect()->route('inventaire.equipements.show', $equipement)
-                ->with('success', 'Équipement mis à jour avec succès.');
-
-        } catch (\Exception $e) {
-            DB::rollBack();
-            
-            return redirect()->back()
-                ->with('error', 'Erreur lors de la mise à jour : ' . $e->getMessage())
-                ->withInput();
+            \Log::info('Mouvement de localisation créé', [
+                'mouvement_id' => $mouvementLocalisation->id,
+                'equipement_id' => $equipement->id,
+                'ancienne_localisation' => $ancienneLocalisationId,
+                'nouvelle_localisation' => $nouvelleLocalisationId,
+            ]);
         }
+
+        // ============================================
+        // TRACKER LE CHANGEMENT DE SERVICE RESPONSABLE
+        // ============================================
+        if ($ancienServiceResponsableId != $nouveauServiceResponsableId) {
+
+            // Déterminer le motif détaillé
+            $motifService = '';
+            if ($ancienServiceResponsableId === null && $nouveauServiceResponsableId !== null) {
+                $motifService = 'Affectation initiale service responsable';
+            } elseif ($ancienServiceResponsableId !== null && $nouveauServiceResponsableId === null) {
+                $motifService = 'Retrait service responsable';
+            } else {
+                $motifService = 'Changement service responsable';
+            }
+
+            $mouvementService = HistoriqueMouvement::create([
+                'equipement_id' => $equipement->id,
+                'date_mouvement' => now(),
+                'ancienne_localisation_id' => $ancienServiceResponsableId,
+                'nouvelle_localisation_id' => $nouveauServiceResponsableId,
+                'motif' => $motifService,
+                'operateur_id' => auth()->id(),
+                'commentaire' => sprintf(
+                    'Modification service responsable - Passage de %s à %s',
+                    $ancienServiceResponsableId ? "service #{$ancienServiceResponsableId}" : 'Aucun service',
+                    $nouveauServiceResponsableId ? "service #{$nouveauServiceResponsableId}" : 'Aucun service'
+                )
+            ]);
+
+            \Log::info('Mouvement de service responsable créé', [
+                'mouvement_id' => $mouvementService->id,
+                'equipement_id' => $equipement->id,
+                'ancien_service' => $ancienServiceResponsableId,
+                'nouveau_service' => $nouveauServiceResponsableId,
+            ]);
+        }
+
+        // Log de l'activité
+        LogActivite::create([
+            'id_utilisateur' => auth()->id(),
+            'date_heure' => now(),
+            'action' => 'modification_equipement',
+            'module' => 'inventaire',
+            'id_element' => $equipement->id,
+            'adresse_ip' => $request->ip(),
+            'details' => "Modification de l'équipement {$equipement->numero_inventaire}",
+            'user_agent' => $request->userAgent(),
+        ]);
+
+        DB::commit();
+
+        return redirect()->route('inventaire.equipements.show', $equipement)
+            ->with('success', 'Équipement mis à jour avec succès.');
+
+    } catch (\Exception $e) {
+        DB::rollBack();
+
+        \Log::error('Erreur mise à jour équipement', [
+            'equipement_id' => $equipement->id,
+            'error' => $e->getMessage(),
+            'trace' => $e->getTraceAsString()
+        ]);
+
+        return redirect()->back()
+            ->with('error', 'Erreur lors de la mise à jour : ' . $e->getMessage())
+            ->withInput();
     }
+}
 
     /**
      * UC-INV-05 : Supprimer/réformer un équipement
@@ -360,7 +431,7 @@ class EquipementController extends Controller
 
         } catch (\Exception $e) {
             DB::rollBack();
-            
+
             return redirect()->back()
                 ->with('error', 'Erreur lors de la réforme : ' . $e->getMessage());
         }
@@ -412,7 +483,7 @@ class EquipementController extends Controller
     public function scanner(Request $request)
     {
         $code = $request->get('code');
-        
+
         if (!$code) {
             return view('inventaire.equipements.scanner');
         }
@@ -431,17 +502,17 @@ class EquipementController extends Controller
     }
 
     /**
-     * UC-INV-06 : Générer une étiquette code-barres 
+     * UC-INV-06 : Générer une étiquette code-barres
      */
 
 public function genererEtiquette(Equipement $equipement)
 {
     // Charger les relations
     $equipement->load(['typeEquipement', 'localisation', 'serviceResponsable', 'fournisseur']);
-    
+
     // QR Code = URL directe vers la page de scan
     $qrContent = route('inventaire.equipements.scan', $equipement->code_barres);
-    
+
     // Générer le QR code
     $qrSvg = QrCode::format('svg')
         ->size(300)
@@ -473,7 +544,7 @@ public function scanQR($code)
         ->orWhere('numero_inventaire', $code)
         ->with(['typeEquipement', 'localisation', 'serviceResponsable', 'fournisseur'])
         ->firstOrFail();
-    
+
     return view('inventaire.equipements.scan', compact('equipement'));
 }
 
@@ -490,7 +561,7 @@ public function scanQR($code)
         $callback = function() use ($equipements) {
             $file = fopen('php://output', 'w');
             fprintf($file, chr(0xEF).chr(0xBB).chr(0xBF)); // BOM pour UTF-8
-            
+
             // En-têtes
             fputcsv($file, [
                 'N° Inventaire',
@@ -547,7 +618,7 @@ public function scanQR($code)
         $total = Equipement::count();
         $actif = Equipement::where('etat', '!=', 'hors_service')->count();
         $hors_service = Equipement::where('etat', 'hors_service')->count();
-        
+
         // Équipements sous garantie (achetés il y a moins de X mois)
         $sous_garantie = Equipement::whereHas('typeEquipement', function($query) {
             $query->where('duree_garantie', '>', 0);
@@ -592,7 +663,7 @@ public function scanQR($code)
         $equipementsAge = Equipement::whereNotNull('date_achat')->get();
         foreach ($equipementsAge as $equipement) {
             $age = $this->calculateAge($equipement->date_achat);
-            
+
             if ($age <= 1) $ageCategories['0-1 an']++;
             elseif ($age <= 3) $ageCategories['1-3 ans']++;
             elseif ($age <= 5) $ageCategories['3-5 ans']++;
@@ -621,7 +692,7 @@ public function scanQR($code)
     private function estSousGarantie($dateAchat, $dureeGarantie)
     {
         if (!$dateAchat || !$dureeGarantie) return false;
-        
+
         $dateFinGarantie = Carbon::parse($dateAchat)->addMonths($dureeGarantie);
         return $dateFinGarantie->isFuture();
     }
@@ -635,7 +706,7 @@ public function scanQR($code)
     private function getTempsRestantVie($dateAchat, $dureeVie)
     {
         if (!$dateAchat || !$dureeVie) return null;
-        
+
         $ageMois = Carbon::parse($dateAchat)->diffInMonths(Carbon::now());
         return max(0, $dureeVie - $ageMois);
     }

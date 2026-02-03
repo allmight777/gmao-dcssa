@@ -10,16 +10,18 @@ use App\Http\Controllers\Auth\NewPasswordController;
 use App\Http\Controllers\Auth\PasswordResetLinkController;
 use App\Http\Controllers\Auth\RegisteredUserController;
 use App\Http\Controllers\Auth\VerifyEmailController;
+use App\Http\Controllers\ChefDivision\DemandeInterventionChefController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\Inventaire\EquipementController;
 use App\Http\Controllers\Inventaire\FournisseurController;
+use App\Http\Controllers\Inventaire\HistoriqueMouvementController;
 use App\Http\Controllers\Inventaire\InventaireController;
 use App\Http\Controllers\Inventaire\ScannerController;
 use App\Http\Controllers\Inventaire\TypeEquipementController;
 use App\Http\Controllers\ProfileController;
-use App\Http\Controllers\usersSimple\UsersSimpleDashboard;
 use App\Http\Controllers\usersSimple\DemandeInterventionController;
-use App\Http\Controllers\ChefDivision\DemandeInterventionChefController;
+use App\Http\Controllers\usersSimple\ProfilSimpleController;
+use App\Http\Controllers\usersSimple\UsersSimpleDashboard;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -155,6 +157,20 @@ Route::middleware('auth')->group(function () {
             Route::patch('/{fournisseur}/toggle-status', [FournisseurController::class, 'toggleStatus'])->name('toggle-status');
         });
 
+        // ============================================
+        // NOUVELLES ROUTES : Historique des mouvements
+        // ============================================
+        Route::prefix('historiques')->name('historiques.')->group(function () {
+            // Export CSV - DOIT être AVANT la route {id}
+            Route::get('/export', [HistoriqueMouvementController::class, 'export'])->name('export');
+
+            // Liste avec filtres et statistiques
+            Route::get('/', [HistoriqueMouvementController::class, 'index'])->name('index');
+
+            // Détails d'un mouvement spécifique
+            Route::get('/{id}', [HistoriqueMouvementController::class, 'show'])->name('show');
+        });
+
         // Routes pour les rapports
         Route::prefix('rapports')->name('rapports.')->group(function () {
             Route::get('/', [InventaireController::class, 'index'])->name('index');
@@ -179,35 +195,32 @@ Route::middleware('auth')->group(function () {
     // Route publique pour scanner les équipements
     Route::get('/scan/{code}', [EquipementController::class, 'scanQR'])->name('inventaire.equipements.scan');
 
-    // Route utilisatures simle
-
+    // Route utilisateurs simples
     Route::get('/UserSimleDashboard', [UsersSimpleDashboard::class, 'index'])->name('UserSimleDashboard');
-
-
 
 });
 
-   // Routes pour les utilisateurs simples
-    Route::prefix('user')->name('user.')->middleware('auth')->group(function () {
-        // Routes pour les demandes d'intervention
-        Route::prefix('demandes')->name('demandes.')->group(function () {
-            Route::get('/', [DemandeInterventionController::class, 'index'])->name('index');
-            Route::get('/create', [DemandeInterventionController::class, 'create'])->name('create');
-            Route::post('/', [DemandeInterventionController::class, 'store'])->name('store');
-            Route::get('/{demande}', [DemandeInterventionController::class, 'show'])->name('show');
-            Route::get('/{demande}/edit', [DemandeInterventionController::class, 'edit'])->name('edit');
-            Route::put('/{demande}', [DemandeInterventionController::class, 'update'])->name('update');
-            Route::delete('/{demande}', [DemandeInterventionController::class, 'destroy'])->name('destroy');
+// Routes pour les utilisateurs simples
+Route::prefix('user')->name('user.')->middleware('auth')->group(function () {
+    // Routes pour les demandes d'intervention
+    Route::prefix('demandes')->name('demandes.')->group(function () {
+        Route::get('/', [DemandeInterventionController::class, 'index'])->name('index');
+        Route::get('/create', [DemandeInterventionController::class, 'create'])->name('create');
+        Route::post('/', [DemandeInterventionController::class, 'store'])->name('store');
+        Route::get('/{demande}', [DemandeInterventionController::class, 'show'])->name('show');
+        Route::get('/{demande}/edit', [DemandeInterventionController::class, 'edit'])->name('edit');
+        Route::put('/{demande}', [DemandeInterventionController::class, 'update'])->name('update');
+        Route::delete('/{demande}', [DemandeInterventionController::class, 'destroy'])->name('destroy');
 
-            // Gestion de la corbeille
-            Route::get('/corbeille', [DemandeInterventionController::class, 'trash'])->name('trash');
-            Route::post('/corbeille/{demande}/restore', [DemandeInterventionController::class, 'restore'])->name('restore');
-            Route::delete('/corbeille/{demande}/force', [DemandeInterventionController::class, 'forceDelete'])->name('forceDelete');
-        });
+        // Gestion de la corbeille
+        Route::get('/corbeille', [DemandeInterventionController::class, 'trash'])->name('trash');
+        Route::post('/corbeille/{demande}/restore', [DemandeInterventionController::class, 'restore'])->name('restore');
+        Route::delete('/corbeille/{demande}/force', [DemandeInterventionController::class, 'forceDelete'])->name('forceDelete');
+
     });
+});
 
-
-    // Routes pour le chef de division
+// Routes pour le chef de division
 Route::middleware(['auth'])->group(function () {
     Route::prefix('chef-division')->name('chef-division.')->group(function () {
         // Dashboard
@@ -237,8 +250,6 @@ Route::middleware(['auth'])->group(function () {
 // Routes pour les utilisateurs simples
 Route::middleware(['auth'])->prefix('user')->name('user.')->group(function () {
 
-
-
     // Disponibilité équipements
     Route::prefix('equipements')->name('equipements.')->group(function () {
         Route::get('/', [UsersSimpleDashboard::class, 'equipements'])->name('index');
@@ -246,7 +257,15 @@ Route::middleware(['auth'])->prefix('user')->name('user.')->group(function () {
         Route::get('/search/quick', [UsersSimpleDashboard::class, 'search'])->name('search');
     });
 
+});
 
+// Pour tous les utilisateurs authentifiés
+Route::middleware(['auth'])->prefix('user')->name('user.')->group(function () {
+    // Mon profil
+    Route::get('/mon-profile', [ProfilSimpleController::class, 'view'])->name('profile.view');
+    Route::get('/mon-profile/modifier', [ProfilSimpleController::class, 'modifier'])->name('profile.modifier');
+    Route::put('/mon-profile/mettre-a-jour', [ProfilSimpleController::class, 'mettreAJour'])->name('profile.mettre-a-jour');
+    Route::put('/mon-profile/modifier-mot-de-passe', [ProfilSimpleController::class, 'modifierMotDePasse'])->name('profile.modifier-mot-de-passe');
 });
 
 Route::get('/medDashboard', function () {

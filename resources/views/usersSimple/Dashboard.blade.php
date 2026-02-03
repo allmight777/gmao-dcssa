@@ -56,38 +56,38 @@
             </a>
 
             <!-- Suivi des demandes -->
-      @php
-    $user = Auth::user();
-@endphp
+            @php
+                $user = Auth::user();
+            @endphp
 
-@if ($user && method_exists($user, 'isChefDivision') && $user->isChefDivision())
-    <!-- Suivi des demandes -->
-    <a href="{{ route('chef-division.demandes.index') }}" class="feature-card">
-        <div class="feature-icon follow">
-            <i class="fas fa-tasks"></i>
-        </div>
-        <div class="feature-content">
-            <h3>Gestion des demandes</h3>
-            <p>Valider les demandes d'intervention de votre service</p>
-            <span class="feature-badge">Chef de division</span>
-        </div>
-        <i class="fas fa-arrow-right feature-arrow"></i>
-    </a>
-@endif
+            @if ($user && method_exists($user, 'isChefDivision') && $user->isChefDivision())
+                <!-- Suivi des demandes -->
+                <a href="{{ route('chef-division.demandes.index') }}" class="feature-card">
+                    <div class="feature-icon follow">
+                        <i class="fas fa-tasks"></i>
+                    </div>
+                    <div class="feature-content">
+                        <h3>Gestion des demandes</h3>
+                        <p>Valider les demandes d'intervention de votre service</p>
+                        <span class="feature-badge">Chef de division</span>
+                    </div>
+                    <i class="fas fa-arrow-right feature-arrow"></i>
+                </a>
+            @endif
 
 
-    <!-- Disponibilité équipements -->
-<a href="{{ route('user.equipements.index') }}" class="feature-card">
-    <div class="feature-icon availability">
-        <i class="fas fa-search"></i>
-    </div>
-    <div class="feature-content">
-        <h3>Disponibilité équipements</h3>
-        <p>Vérifier la disponibilité des équipements en temps réel</p>
-        <span class="feature-badge">UC-USR-03</span>
-    </div>
-    <i class="fas fa-arrow-right feature-arrow"></i>
-</a>
+            <!-- Disponibilité équipements -->
+            <a href="{{ route('user.equipements.index') }}" class="feature-card">
+                <div class="feature-icon availability">
+                    <i class="fas fa-search"></i>
+                </div>
+                <div class="feature-content">
+                    <h3>Disponibilité équipements</h3>
+                    <p>Vérifier la disponibilité des équipements en temps réel</p>
+                    <span class="feature-badge">UC-USR-03</span>
+                </div>
+                <i class="fas fa-arrow-right feature-arrow"></i>
+            </a>
 
             <!-- Prêt d'équipement -->
             <a href="" class="feature-card">
@@ -167,18 +167,17 @@
                 <i class="fas fa-arrow-right feature-arrow"></i>
             </a>
 
-            <!-- Mes équipements favoris -->
-            <a href="" class="feature-card">
-                <div class="feature-icon favorite">
-                    <i class="fas fa-star"></i>
-                </div>
-                <div class="feature-content">
-                    <h3>Équipements favoris</h3>
-                    <p>Accéder rapidement à vos équipements fréquemment utilisés</p>
-                    <span class="feature-badge">Personnalisé</span>
-                </div>
-                <i class="fas fa-arrow-right feature-arrow"></i>
-            </a>
+        <a href="{{ route('user.profile.view') }}" class="feature-card">
+    <div class="feature-icon favorite">
+        <i class="fas fa-star"></i>
+    </div>
+    <div class="feature-content">
+        <h3>Mon profil</h3>
+        <p>Accéder à votre profil</p>
+        <span class="feature-badge">Personnalisé</span>
+    </div>
+    <i class="fas fa-arrow-right feature-arrow"></i>
+</a>
 
             <!-- Historique des activités -->
             <a href="" class="feature-card">

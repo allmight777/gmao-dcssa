@@ -636,8 +636,18 @@
                         <span class="nav-text">Fournisseurs</span>
                     </a>
                 </li>
-
                 <li class="nav-item">
+                    <a href="{{ route('inventaire.historiques.index') }}"
+                        class="nav-link {{ request()->routeIs('inventaire.historiques.*') ? 'active' : '' }}">
+                        <i class="fas fa-history"></i>
+                        <span class="nav-text">Historique Mouvements</span>
+                        @if (isset($nombreMouvementsRecents) && $nombreMouvementsRecents > 0)
+                            <span class="badge badge-primary badge-pill ml-auto">{{ $nombreMouvementsRecents }}</span>
+                        @endif
+                    </a>
+                </li>
+
+           {{--      <li class="nav-item">
                     <a href="{{ route('inventaire.scanner.index') }}"
                         class="nav-link {{ request()->routeIs('inventaire.scanner.*') ? 'active' : '' }}">
                         <i class="fas fa-barcode"></i>
@@ -651,7 +661,7 @@
                         <i class="fas fa-chart-bar"></i>
                         <span class="nav-text">Rapports</span>
                     </a>
-                </li>
+                </li>   --}}
             @endif
 
             <!-- Menu pour les magasiniers -->
@@ -673,10 +683,11 @@
     <main class="main-content" id="mainContent">
         <div class="container-fluid">
             <!-- En-tête de page -->
+            {{-- Page d'Administration - GMAO DCSSA --}}
             <div class="page-header">
                 <div class="d-flex justify-content-between align-items-center">
-                    <h1>
-                        <i class="fas fa-cogs"></i>
+                    <h1 class="animated-title">
+                        <i class="fas fa-cogs spin-on-hover"></i>
                         @yield('page-title', 'Administration')
                     </h1>
                     <div class="btn-toolbar">
@@ -685,6 +696,696 @@
                 </div>
             </div>
 
+            {{-- Section Bienvenue avec animation --}}
+            <div class="welcome-section fade-in">
+                <div class="card border-0 shadow-lg mb-4">
+                    <div class="card-body p-4">
+                        <div class="row align-items-center">
+                            <div class="col-md-2 text-center">
+                                <div class="icon-circle pulse">
+                                    <i class="fas fa-shield-alt fa-3x text-primary"></i>
+                                </div>
+                            </div>
+                            <div class="col-md-10">
+                                <h2 class="text-primary mb-3">
+                                    <i class="fas fa-user-shield"></i> Espace Administrateur - Gestion GMAO DCSSA
+                                </h2>
+                                <p class="lead mb-0">
+                                    Bienvenue dans l'espace d'administration du système de Gestion de Maintenance
+                                    Assistée par Ordinateur
+                                    de la Direction Centrale du Service de Santé des Armées. Vous disposez des
+                                    privilèges nécessaires
+                                    pour gérer l'ensemble du système.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <br>
+
+            {{-- Alertes de Sécurité Importantes --}}
+            <div class="security-alerts slide-in-left">
+                <div class="alert alert-warning border-left-warning shadow-sm mb-4" role="alert">
+                    <div class="d-flex align-items-center">
+                        <i class="fas fa-exclamation-triangle fa-2x mr-3 text-warning pulse-warning"></i>
+                        <div>
+                            <h4 class="alert-heading mb-2">
+                                <i class="fas fa-bell"></i> Rappel de Sécurité Important
+                            </h4>
+                            <p class="mb-0">
+                                En tant qu'administrateur, vous avez accès à des informations sensibles et stratégiques
+                                des Forces Armées Béninoises.
+                                La protection de ces données est votre responsabilité première.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {{-- Grille de Conseils de Sécurité --}}
+            <div class="row mb-4">
+                {{-- Conseil 1: Mots de passe --}}
+                <div class="col-md-6 col-lg-4 mb-4">
+                    <div class="card h-100 border-0 shadow hover-lift fade-in-up" style="animation-delay: 0.1s">
+                        <div class="card-header bg-gradient-primary text-white">
+                            <h5 class="mb-0">
+                                <i class="fas fa-key"></i> Mots de Passe Robustes
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="security-icon text-center mb-3">
+                                <i class="fas fa-lock fa-3x text-primary floating"></i>
+                            </div>
+                            <h6 class="text-primary font-weight-bold mb-3">Bonnes Pratiques:</h6>
+                            <ul class="list-unstyled">
+                                <li class="mb-2">
+                                    <i class="fas fa-check-circle text-success"></i>
+                                    Minimum <strong>12 caractères</strong>
+                                </li>
+                                <li class="mb-2">
+                                    <i class="fas fa-check-circle text-success"></i>
+                                    Mélange majuscules, minuscules, chiffres et symboles
+                                </li>
+                                <li class="mb-2">
+                                    <i class="fas fa-check-circle text-success"></i>
+                                    Changement <strong>tous les 90 jours</strong>
+                                </li>
+                                <li class="mb-2">
+                                    <i class="fas fa-times-circle text-danger"></i>
+                                    Jamais d'informations personnelles
+                                </li>
+                                <li class="mb-2">
+                                    <i class="fas fa-times-circle text-danger"></i>
+                                    Ne pas réutiliser d'anciens mots de passe
+                                </li>
+                            </ul>
+                            <div class="alert alert-info mt-3 mb-0">
+                                <small>
+                                    <i class="fas fa-lightbulb"></i>
+                                    <strong>Astuce:</strong> Utilisez une phrase secrète facile à retenir mais difficile
+                                    à deviner
+                                </small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                {{-- Conseil 2: Confidentialité --}}
+                <div class="col-md-6 col-lg-4 mb-4">
+                    <div class="card h-100 border-0 shadow hover-lift fade-in-up" style="animation-delay: 0.2s">
+                        <div class="card-header bg-gradient-danger text-white">
+                            <h5 class="mb-0">
+                                <i class="fas fa-user-secret"></i> Confidentialité Absolue
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="security-icon text-center mb-3">
+                                <i class="fas fa-eye-slash fa-3x text-danger floating"></i>
+                            </div>
+                            <h6 class="text-danger font-weight-bold mb-3">Règles Strictes:</h6>
+                            <ul class="list-unstyled">
+                                <li class="mb-2">
+                                    <i class="fas fa-ban text-danger"></i>
+                                    <strong>Aucune</strong> divulgation d'identifiants
+                                </li>
+                                <li class="mb-2">
+                                    <i class="fas fa-ban text-danger"></i>
+                                    Ne jamais partager votre session
+                                </li>
+                                <li class="mb-2">
+                                    <i class="fas fa-ban text-danger"></i>
+                                    Pas de capture d'écran d'informations sensibles
+                                </li>
+                                <li class="mb-2">
+                                    <i class="fas fa-check-circle text-success"></i>
+                                    Toujours verrouiller votre poste
+                                </li>
+                                <li class="mb-2">
+                                    <i class="fas fa-check-circle text-success"></i>
+                                    Déconnexion systématique en fin de session
+                                </li>
+                            </ul>
+                            <div class="alert alert-danger mt-3 mb-0">
+                                <small>
+                                    <i class="fas fa-shield-alt"></i>
+                                    <strong>Rappel:</strong> Données classifiées défense nationale
+                                </small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                {{-- Conseil 3: Protection des données --}}
+                <div class="col-md-6 col-lg-4 mb-4">
+                    <div class="card h-100 border-0 shadow hover-lift fade-in-up" style="animation-delay: 0.3s">
+                        <div class="card-header bg-gradient-success text-white">
+                            <h5 class="mb-0">
+                                <i class="fas fa-database"></i> Protection des Données
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="security-icon text-center mb-3">
+                                <i class="fas fa-server fa-3x text-success floating"></i>
+                            </div>
+                            <h6 class="text-success font-weight-bold mb-3">Responsabilités:</h6>
+                            <ul class="list-unstyled">
+                                <li class="mb-2">
+                                    <i class="fas fa-save text-success"></i>
+                                    Sauvegardes régulières automatiques
+                                </li>
+                                <li class="mb-2">
+                                    <i class="fas fa-history text-success"></i>
+                                    Archivage sécurisé des anciennes données
+                                </li>
+                                <li class="mb-2">
+                                    <i class="fas fa-shield-virus text-success"></i>
+                                    Protection anti-intrusion active
+                                </li>
+                                <li class="mb-2">
+                                    <i class="fas fa-file-contract text-success"></i>
+                                    Journalisation complète des accès
+                                </li>
+                                <li class="mb-2">
+                                    <i class="fas fa-sync-alt text-success"></i>
+                                    Synchronisation multi-sites sécurisée
+                                </li>
+                            </ul>
+                            <div class="alert alert-success mt-3 mb-0">
+                                <small>
+                                    <i class="fas fa-clock"></i>
+                                    <strong>Info:</strong> Conservation 5 ans minimum
+                                </small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                {{-- Conseil 4: Surveillance --}}
+                <div class="col-md-6 col-lg-4 mb-4">
+                    <div class="card h-100 border-0 shadow hover-lift fade-in-up" style="animation-delay: 0.4s">
+                        <div class="card-header bg-gradient-warning text-white">
+                            <h5 class="mb-0">
+                                <i class="fas fa-video"></i> Surveillance Active
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="security-icon text-center mb-3">
+                                <i class="fas fa-eye fa-3x text-warning floating"></i>
+                            </div>
+                            <h6 class="text-warning font-weight-bold mb-3">Vigilance Continue:</h6>
+                            <ul class="list-unstyled">
+                                <li class="mb-2">
+                                    <i class="fas fa-chart-line text-warning"></i>
+                                    Monitoring des activités système
+                                </li>
+                                <li class="mb-2">
+                                    <i class="fas fa-bell text-warning"></i>
+                                    Alertes en temps réel
+                                </li>
+                                <li class="mb-2">
+                                    <i class="fas fa-user-clock text-warning"></i>
+                                    Traçabilité des connexions
+                                </li>
+                                <li class="mb-2">
+                                    <i class="fas fa-fingerprint text-warning"></i>
+                                    Authentification renforcée
+                                </li>
+                                <li class="mb-2">
+                                    <i class="fas fa-exclamation-triangle text-warning"></i>
+                                    Détection d'anomalies
+                                </li>
+                            </ul>
+                            <div class="alert alert-warning mt-3 mb-0">
+                                <small>
+                                    <i class="fas fa-info-circle"></i>
+                                    <strong>Note:</strong> Logs conservés 12 mois
+                                </small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                {{-- Conseil 5: Formation --}}
+                <div class="col-md-6 col-lg-4 mb-4">
+                    <div class="card h-100 border-0 shadow hover-lift fade-in-up" style="animation-delay: 0.5s">
+                        <div class="card-header bg-gradient-info text-white">
+                            <h5 class="mb-0">
+                                <i class="fas fa-graduation-cap"></i> Formation Continue
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="security-icon text-center mb-3">
+                                <i class="fas fa-chalkboard-teacher fa-3x text-info floating"></i>
+                            </div>
+                            <h6 class="text-info font-weight-bold mb-3">Développement:</h6>
+                            <ul class="list-unstyled">
+                                <li class="mb-2">
+                                    <i class="fas fa-book text-info"></i>
+                                    Manuels utilisateur disponibles
+                                </li>
+                                <li class="mb-2">
+                                    <i class="fas fa-video text-info"></i>
+                                    Tutoriels vidéo intégrés
+                                </li>
+                                <li class="mb-2">
+                                    <i class="fas fa-users text-info"></i>
+                                    Sessions de formation régulières
+                                </li>
+                                <li class="mb-2">
+                                    <i class="fas fa-certificate text-info"></i>
+                                    Certifications administrateurs
+                                </li>
+                                <li class="mb-2">
+                                    <i class="fas fa-sync text-info"></i>
+                                    Mise à jour des compétences
+                                </li>
+                            </ul>
+                            <div class="alert alert-info mt-3 mb-0">
+                                <small>
+                                    <i class="fas fa-calendar-check"></i>
+                                    <strong>Prochaine:</strong> Formation trimestrielle
+                                </small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                {{-- Conseil 6: Support --}}
+                <div class="col-md-6 col-lg-4 mb-4">
+                    <div class="card h-100 border-0 shadow hover-lift fade-in-up" style="animation-delay: 0.6s">
+                        <div class="card-header bg-gradient-secondary text-white">
+                            <h5 class="mb-0">
+                                <i class="fas fa-headset"></i> Support Technique
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="security-icon text-center mb-3">
+                                <i class="fas fa-life-ring fa-3x text-secondary floating"></i>
+                            </div>
+                            <h6 class="text-secondary font-weight-bold mb-3">Assistance 24/7:</h6>
+                            <ul class="list-unstyled">
+                                <li class="mb-2">
+                                    <i class="fas fa-phone text-secondary"></i>
+                                    Hotline dédiée DCSSA
+                                </li>
+                                <li class="mb-2">
+                                    <i class="fas fa-envelope text-secondary"></i>
+                                    Support par email sécurisé
+                                </li>
+                                <li class="mb-2">
+                                    <i class="fas fa-comments text-secondary"></i>
+                                    Chat en ligne avec experts
+                                </li>
+                                <li class="mb-2">
+                                    <i class="fas fa-tools text-secondary"></i>
+                                    Maintenance préventive planifiée
+                                </li>
+                                <li class="mb-2">
+                                    <i class="fas fa-ambulance text-secondary"></i>
+                                    Intervention d'urgence rapide
+                                </li>
+                            </ul>
+                            <div class="alert alert-secondary mt-3 mb-0">
+                                <small>
+                                    <i class="fas fa-clock"></i>
+                                    <strong>Délai:</strong> Réponse sous 2h maximum
+                                </small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {{-- Section Obligations Légales --}}
+            <div class="legal-section slide-in-right">
+                <div class="card border-0 shadow-lg mb-4">
+                    <div class="card-header bg-dark text-white">
+                        <h4 class="mb-0">
+                            <i class="fas fa-gavel"></i> Obligations Légales et Réglementaires
+                        </h4>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="legal-item mb-3 p-3 bg-light rounded">
+                                    <h6 class="text-primary">
+                                        <i class="fas fa-balance-scale"></i> Conformité Réglementaire
+                                    </h6>
+                                    <p class="mb-0 small">
+                                        Le système doit respecter les normes nationales de sécurité des systèmes
+                                        d'information
+                                        et les exigences de confidentialité militaire des Forces Armées Béninoises.
+                                    </p>
+                                </div>
+                                <div class="legal-item mb-3 p-3 bg-light rounded">
+                                    <h6 class="text-primary">
+                                        <i class="fas fa-file-signature"></i> Traçabilité Obligatoire
+                                    </h6>
+                                    <p class="mb-0 small">
+                                        Toutes les actions administratives sont journalisées et conservées conformément
+                                        aux exigences de redevabilité dans la gestion des ressources publiques
+                                        stratégiques.
+                                    </p>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="legal-item mb-3 p-3 bg-light rounded">
+                                    <h6 class="text-primary">
+                                        <i class="fas fa-user-shield"></i> Protection des Données
+                                    </h6>
+                                    <p class="mb-0 small">
+                                        Les données médicales et opérationnelles sont classifiées. Leur divulgation non
+                                        autorisée
+                                        est passible de sanctions disciplinaires et pénales selon le Code de Justice
+                                        Militaire.
+                                    </p>
+                                </div>
+                                <div class="legal-item mb-3 p-3 bg-light rounded">
+                                    <h6 class="text-primary">
+                                        <i class="fas fa-certificate"></i> Habilitations Requises
+                                    </h6>
+                                    <p class="mb-0 small">
+                                        L'accès administrateur nécessite une habilitation de sécurité valide et une
+                                        formation
+                                        certifiée. Vérifiez la validité de vos accréditations régulièrement.
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+
+            {{-- Section Recommandations --}}
+            <div class="recommendations-section">
+                <div class="card border-0 shadow-lg">
+                    <div class="card-header bg-gradient-info text-white">
+                        <h4 class="mb-0">
+                            <i class="fas fa-lightbulb"></i> Recommandations et Meilleures Pratiques
+                        </h4>
+                    </div>
+                    <div class="card-body">
+                        <div class="accordion" id="bestPracticesAccordion">
+                            {{-- Recommandation 1 --}}
+                            <div class="card mb-2 border-left-primary">
+                                <div class="card-header bg-white" id="heading1">
+                                    <h5 class="mb-0">
+                                        <button class="btn btn-link text-decoration-none w-100 text-left"
+                                            type="button" data-toggle="collapse" data-target="#collapse1">
+                                            <i class="fas fa-caret-right mr-2"></i>
+                                            <i class="fas fa-clock text-primary"></i>
+                                            Planification des Opérations de Maintenance
+                                        </button>
+                                    </h5>
+                                </div>
+                                <div id="collapse1" class="collapse show" data-parent="#bestPracticesAccordion">
+                                    <div class="card-body">
+                                        <p>Organisez les interventions de maintenance en dehors des heures
+                                            opérationnelles critiques
+                                            pour minimiser l'impact sur les services de santé militaires.</p>
+                                        <ul>
+                                            <li>Préférez les créneaux nocturnes (22h - 6h) pour les mises à jour
+                                                majeures</li>
+                                            <li>Informez tous les utilisateurs 48h à l'avance minimum</li>
+                                            <li>Prévoyez toujours un plan de secours en cas de problème</li>
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+
+
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <style>
+                /* Animations */
+                @keyframes fadeIn {
+                    from {
+                        opacity: 0;
+                    }
+
+                    to {
+                        opacity: 1;
+                    }
+                }
+
+                @keyframes slideInLeft {
+                    from {
+                        opacity: 0;
+                        transform: translateX(-50px);
+                    }
+
+                    to {
+                        opacity: 1;
+                        transform: translateX(0);
+                    }
+                }
+
+                @keyframes slideInRight {
+                    from {
+                        opacity: 0;
+                        transform: translateX(50px);
+                    }
+
+                    to {
+                        opacity: 1;
+                        transform: translateX(0);
+                    }
+                }
+
+                @keyframes fadeInUp {
+                    from {
+                        opacity: 0;
+                        transform: translateY(30px);
+                    }
+
+                    to {
+                        opacity: 1;
+                        transform: translateY(0);
+                    }
+                }
+
+                @keyframes pulse {
+
+                    0%,
+                    100% {
+                        transform: scale(1);
+                    }
+
+                    50% {
+                        transform: scale(1.05);
+                    }
+                }
+
+                @keyframes float {
+
+                    0%,
+                    100% {
+                        transform: translateY(0px);
+                    }
+
+                    50% {
+                        transform: translateY(-10px);
+                    }
+                }
+
+                @keyframes spin {
+                    from {
+                        transform: rotate(0deg);
+                    }
+
+                    to {
+                        transform: rotate(360deg);
+                    }
+                }
+
+                /* Classes d'animation */
+                .fade-in {
+                    animation: fadeIn 1s ease-in;
+                }
+
+                .slide-in-left {
+                    animation: slideInLeft 0.8s ease-out;
+                }
+
+                .slide-in-right {
+                    animation: slideInRight 0.8s ease-out;
+                }
+
+                .fade-in-up {
+                    animation: fadeInUp 0.6s ease-out;
+                    animation-fill-mode: both;
+                }
+
+                .pulse {
+                    animation: pulse 2s infinite;
+                }
+
+                .pulse-warning {
+                    animation: pulse 1.5s infinite;
+                }
+
+                .floating {
+                    animation: float 3s ease-in-out infinite;
+                }
+
+                .spin-on-hover:hover {
+                    animation: spin 1s linear;
+                }
+
+                /* Effets de survol */
+                .hover-lift {
+                    transition: transform 0.3s ease, box-shadow 0.3s ease;
+                }
+
+                .hover-lift:hover {
+                    transform: translateY(-5px);
+                    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15) !important;
+                }
+
+                .hover-scale {
+                    transition: transform 0.3s ease;
+                }
+
+                .hover-scale:hover {
+                    transform: scale(1.05);
+                }
+
+                /* Gradients personnalisés */
+                .bg-gradient-primary {
+                    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                }
+
+                .bg-gradient-danger {
+                    background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+                }
+
+                .bg-gradient-success {
+                    background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+                }
+
+                .bg-gradient-warning {
+                    background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
+                }
+
+                .bg-gradient-info {
+                    background: linear-gradient(135deg, #30cfd0 0%, #330867 100%);
+                }
+
+                .bg-gradient-secondary {
+                    background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);
+                }
+
+                /* Bordures colorées */
+                .border-left-primary {
+                    border-left: 4px solid #667eea;
+                }
+
+                .border-left-success {
+                    border-left: 4px solid #00f2fe;
+                }
+
+                .border-left-warning {
+                    border-left: 4px solid #fee140;
+                }
+
+                /* Icônes cercles */
+                .icon-circle {
+                    width: 80px;
+                    height: 80px;
+                    border-radius: 50%;
+                    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    margin: 0 auto;
+                }
+
+                .icon-circle i {
+                    color: white;
+                }
+
+                /* Animation du compteur */
+                .counter {
+                    font-weight: bold;
+                    color: #333;
+                }
+
+                /* Titre animé */
+                .animated-title {
+                    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                    -webkit-background-clip: text;
+                    -webkit-text-fill-color: transparent;
+                    background-clip: text;
+                }
+
+                /* Responsive */
+                @media (max-width: 768px) {
+                    .card-body {
+                        padding: 1rem !important;
+                    }
+
+                    .stat-box {
+                        margin-bottom: 1rem;
+                    }
+                }
+            </style>
+
+            <script>
+                // Animation des compteurs
+                document.addEventListener('DOMContentLoaded', function() {
+                    const counters = document.querySelectorAll('.counter');
+
+                    counters.forEach(counter => {
+                        const target = parseInt(counter.getAttribute('data-target'));
+                        const duration = 2000; // 2 secondes
+                        const increment = target / (duration / 16); // 60 FPS
+                        let current = 0;
+
+                        const updateCounter = () => {
+                            current += increment;
+                            if (current < target) {
+                                counter.textContent = Math.floor(current);
+                                requestAnimationFrame(updateCounter);
+                            } else {
+                                counter.textContent = target;
+                            }
+                        };
+
+                        // Démarrer l'animation quand l'élément est visible
+                        const observer = new IntersectionObserver((entries) => {
+                            entries.forEach(entry => {
+                                if (entry.isIntersecting) {
+                                    updateCounter();
+                                    observer.unobserve(entry.target);
+                                }
+                            });
+                        });
+
+                        observer.observe(counter);
+                    });
+
+                    // Animation des icônes d'accordéon
+                    const accordionButtons = document.querySelectorAll('[data-toggle="collapse"]');
+                    accordionButtons.forEach(button => {
+                        button.addEventListener('click', function() {
+                            const icon = this.querySelector('.fa-caret-right');
+                            if (icon) {
+                                icon.style.transition = 'transform 0.3s ease';
+                                if (this.classList.contains('collapsed')) {
+                                    icon.style.transform = 'rotate(0deg)';
+                                } else {
+                                    icon.style.transform = 'rotate(90deg)';
+                                }
+                            }
+                        });
+                    });
+                });
+            </script>
             <!-- Messages flash -->
             @if (session('success'))
                 <div class="alert alert-success alert-dismissible fade show" role="alert">

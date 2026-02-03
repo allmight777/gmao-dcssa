@@ -137,4 +137,9 @@ public function interventions()
     );
 }
 
+public function operateur()
+{
+    return $this->belongsTo(Utilisateur::class, 'operateur_id');
+}
+
 }

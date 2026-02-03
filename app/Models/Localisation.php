@@ -118,4 +118,11 @@ class Localisation extends Model
     {
         return implode(' > ', $this->hierarchie);
     }
+
+    // Dans Localisation.php
+public function service()
+{
+    return $this->belongsTo(Localisation::class, 'parent_id');
+}
+
 }
