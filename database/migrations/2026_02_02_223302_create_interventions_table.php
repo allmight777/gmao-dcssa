@@ -13,7 +13,7 @@ return new class extends Migration
     {
         Schema::create('intervention', function (Blueprint $table) {
 
-            // 2.1.4 INTERVENTION
+
             $table->id('ID_Intervention');
 
             $table->unsignedBigInteger('ID_Demande')->nullable();
@@ -42,6 +42,7 @@ return new class extends Migration
             $table->string('Signature_Client')->nullable();
 
             $table->timestamps();
+            
 
             // Clé étrangère (si la table equipements existe)
             $table->foreign('ID_Equipement_Controle')

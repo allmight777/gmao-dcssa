@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Admin\CompteController;
 use App\Http\Controllers\Admin\ProfilController;
+use App\Http\Controllers\Admin\AdminLogController;
 use App\Http\Controllers\Admin\ServiceController;
 use App\Http\Controllers\Auth\AuthenticatedSessionController;
 use App\Http\Controllers\Auth\EmailVerificationNotificationController;
@@ -19,6 +20,7 @@ use App\Http\Controllers\Inventaire\InventaireController;
 use App\Http\Controllers\Inventaire\ScannerController;
 use App\Http\Controllers\Inventaire\TypeEquipementController;
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\Technicien\TechnicienInterventionController;
 use App\Http\Controllers\usersSimple\DemandeInterventionController;
 use App\Http\Controllers\usersSimple\ProfilSimpleController;
 use App\Http\Controllers\usersSimple\UsersSimpleDashboard;
@@ -29,8 +31,6 @@ use Illuminate\Support\Facades\Route;
 | Web Routes
 |--------------------------------------------------------------------------
 */
-
-
 
 // Routes d'authentification Breeze
 Route::middleware('guest')->group(function () {
@@ -104,6 +104,25 @@ Route::middleware('auth')->group(function () {
             Route::delete('/{service}/utilisateurs/{utilisateur}', [ServiceController::class, 'retirerUtilisateur'])->name('retirer-utilisateur');
             Route::put('/{service}/utilisateurs/{utilisateur}', [ServiceController::class, 'updateAffectation'])->name('update-affectation');
         });
+
+
+
+
+            // NOUVELLES ROUTES POUR LES LOGS
+    Route::prefix('logs')->name('logs.')->group(function () {
+        Route::get('/', [AdminLogController::class, 'index'])
+            ->name('dashboard');
+
+        Route::get('/export', [AdminLogController::class, 'export'])
+            ->name('export');
+
+        Route::get('/fichier', [AdminLogController::class, 'viewLogFile'])
+            ->name('fichier');
+
+        Route::post('/clear', [AdminLogController::class, 'clearLogs'])
+            ->name('clear');
+    });
+
     });
 
     // Routes pour l'inventaire
@@ -202,6 +221,72 @@ Route::middleware('auth')->group(function () {
 
 });
 
+// Routes pour le technicien interne
+Route::middleware(['auth'])->prefix('technicien')->name('technicien.')->group(function () {
+
+    // Dashboard technicien
+    Route::get('/dashboard', [TechnicienInterventionController::class, 'dashboard'])
+        ->name('dashboard');
+
+    // Gestion des demandes d'intervention (UC-TEC-01)
+    Route::prefix('demandes')->name('demandes.')->group(function () {
+        Route::get('/', [TechnicienInterventionController::class, 'index'])
+            ->name('index');
+        Route::get('/{id}', [TechnicienInterventionController::class, 'show'])
+            ->name('show');
+        Route::get('/export/csv', [TechnicienInterventionController::class, 'exportDemandes'])
+            ->name('export');
+    });
+
+    // Gestion des interventions (UC-TEC-02 et UC-TEC-03)
+    Route::prefix('interventions')->name('interventions.')->group(function () {
+        // Liste des interventions
+        Route::get('/', [TechnicienInterventionController::class, 'interventionsList'])
+            ->name('index');
+
+        // Planification (UC-TEC-02)
+        Route::get('/planifier/{id}', [TechnicienInterventionController::class, 'planifierForm'])
+            ->name('planifier');
+        Route::post('/planifier/{id}', [TechnicienInterventionController::class, 'planifierStore'])
+            ->name('planifier.store');
+
+        // Saisie de rapport (UC-TEC-03)
+        Route::get('/{id}/rapport', [TechnicienInterventionController::class, 'saisirRapportForm'])
+            ->name('rapport');
+        Route::post('/{id}/rapport', [TechnicienInterventionController::class, 'saisirRapportStore'])
+            ->name('rapport.store');
+
+        // Détail d'une intervention
+        Route::get('/{id}', [TechnicienInterventionController::class, 'showIntervention'])
+            ->name('show');
+    });
+
+    // Gestion des équipements (UC-TEC-08)
+    Route::prefix('equipements')->name('equipements.')->group(function () {
+        Route::patch('/{id}/statut', [TechnicienInterventionController::class, 'updateEquipementStatus'])
+            ->name('update-statut');
+    });
+
+    // Routes pour la maintenance préventive
+    Route::prefix('preventive')->name('preventive.')->group(function () {
+        // Liste des équipements éligibles
+        Route::get('/equipements', [TechnicienInterventionController::class, 'equipementsPreventive'])
+            ->name('equipements');
+
+        // Formulaire de planification
+        Route::get('/planifier/{id}', [TechnicienInterventionController::class, 'planifierPreventiveForm'])
+            ->name('planifier');
+
+        // Enregistrement de la planification
+        Route::post('/planifier/{id}', [TechnicienInterventionController::class, 'planifierPreventiveStore'])
+            ->name('planifier.store');
+
+        // Liste des maintenances préventives
+        Route::get('/liste', [TechnicienInterventionController::class, 'preventivesList'])
+            ->name('index');
+    });
+});
+
 // Routes pour les utilisateurs simples
 Route::prefix('user')->name('user.')->middleware('auth')->group(function () {
     // Routes pour les demandes d'intervention
@@ -218,6 +303,13 @@ Route::prefix('user')->name('user.')->middleware('auth')->group(function () {
         Route::get('/corbeille', [DemandeInterventionController::class, 'trash'])->name('trash');
         Route::post('/corbeille/{demande}/restore', [DemandeInterventionController::class, 'restore'])->name('restore');
         Route::delete('/corbeille/{demande}/force', [DemandeInterventionController::class, 'forceDelete'])->name('forceDelete');
+
+        // NOUVELLES ROUTES POUR LE PLANNING
+        Route::get('/{id}/planning', [DemandeInterventionController::class, 'planning'])->name('planning');
+        Route::get('/{id}/planning/detaille', [DemandeInterventionController::class, 'showPlanning'])->name('planning.detaille');
+
+        // Calendrier global
+        Route::get('/calendrier', [DemandeInterventionController::class, 'calendrier'])->name('calendrier');
 
     });
 });

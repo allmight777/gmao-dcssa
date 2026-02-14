@@ -10,7 +10,7 @@ class LogActivite extends Model
     use HasFactory;
 
     protected $table = 'log_activite';
-    
+
     protected $fillable = [
         'id_utilisateur',
         'date_heure',
@@ -41,6 +41,12 @@ class LogActivite extends Model
     public function scopeAction($query, $action)
     {
         return $query->where('action', $action);
+    }
+
+
+    public function scopePeriode($query, $debut, $fin)
+    {
+        return $query->whereBetween('date_heure', [$debut, $fin]);
     }
 
     public function scopeDateRange($query, $start, $end)

@@ -142,4 +142,14 @@ public function operateur()
     return $this->belongsTo(Utilisateur::class, 'operateur_id');
 }
 
+
+
+/**
+ * Alias avec underscore pour la compatibilité
+ */
+public function type_equipement()
+{
+    return $this->typeEquipement();
+}
+
 }

@@ -1,7 +1,7 @@
 @extends('layouts.welcome')
 
 @section('content')
-<div class="container-fluid py-4">
+<div class="container-fluid py-4" style="width: 80%;">
 
     <!-- Messages d'alerte -->
     @if(session('success'))
@@ -230,37 +230,50 @@
                                             {{ $demande->etat_formate }}
                                         </span>
                                     </td>
-                                    <td class="text-center">
-                                        <div class="btn-group" role="group">
-                                            <a href="{{ route('user.demandes.show', $demande->ID_Demande) }}"
-                                               class="btn btn-sm btn-info btn-action"
-                                               data-bs-toggle="tooltip"
-                                               title="Voir détails">
-                                                <i class="fas fa-eye"></i>
-                                            </a>
-                                            @if($demande->isEnAttente())
-                                            <a href="{{ route('user.demandes.edit', $demande->ID_Demande) }}"
-                                               class="btn btn-sm btn-warning btn-action"
-                                               data-bs-toggle="tooltip"
-                                               title="Modifier">
-                                                <i class="fas fa-edit"></i>
-                                            </a>
-                                            <form action="{{ route('user.demandes.destroy', $demande->ID_Demande) }}"
-                                                  method="POST"
-                                                  class="d-inline">
-                                                @csrf
-                                                @method('DELETE')
-                                                <button type="submit"
-                                                        class="btn btn-sm btn-danger btn-action"
-                                                        onclick="return confirm('Êtes-vous sûr de vouloir supprimer cette demande ?')"
-                                                        data-bs-toggle="tooltip"
-                                                        title="Supprimer">
-                                                    <i class="fas fa-trash"></i>
-                                                </button>
-                                            </form>
-                                            @endif
-                                        </div>
-                                    </td>
+                            <td class="text-center">
+    <div class="btn-group" role="group">
+        <!-- Bouton Voir détails (existant) -->
+        <a href="{{ route('user.demandes.show', $demande->ID_Demande) }}"
+           class="btn btn-sm btn-info btn-action"
+           data-bs-toggle="tooltip"
+           title="Voir détails">
+            <i class="fas fa-eye"></i>
+        </a>
+
+        <!-- NOUVEAU : Bouton Planning - Visible pour les demandes validées, en cours ou terminées -->
+        @if(in_array($demande->Statut, ['validee', 'en_cours', 'terminee']))
+        <a href="{{ route('user.demandes.planning', $demande->ID_Demande) }}"
+           class="btn btn-sm btn-success btn-action"
+           data-bs-toggle="tooltip"
+           title="Voir le planning">
+            <i class="fas fa-calendar-alt"></i>
+        </a>
+        @endif
+
+        <!-- Bouton Modifier (existant) - Seulement pour les demandes en attente -->
+        @if($demande->isEnAttente())
+        <a href="{{ route('user.demandes.edit', $demande->ID_Demande) }}"
+           class="btn btn-sm btn-warning btn-action"
+           data-bs-toggle="tooltip"
+           title="Modifier">
+            <i class="fas fa-edit"></i>
+        </a>
+        <form action="{{ route('user.demandes.destroy', $demande->ID_Demande) }}"
+              method="POST"
+              class="d-inline">
+            @csrf
+            @method('DELETE')
+            <button type="submit"
+                    class="btn btn-sm btn-danger btn-action"
+                    onclick="return confirm('Êtes-vous sûr de vouloir supprimer cette demande ?')"
+                    data-bs-toggle="tooltip"
+                    title="Supprimer">
+                <i class="fas fa-trash"></i>
+            </button>
+        </form>
+        @endif
+    </div>
+</td>
                                 </tr>
                                 @endforeach
                             </tbody>

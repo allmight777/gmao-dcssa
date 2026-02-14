@@ -89,134 +89,29 @@
                 <i class="fas fa-arrow-right feature-arrow"></i>
             </a>
 
-            <!-- Prêt d'équipement -->
-            <a href="" class="feature-card">
-                <div class="feature-icon loan">
-                    <i class="fas fa-exchange-alt"></i>
+
+
+
+
+
+
+
+
+
+            <a href="{{ route('user.profile.view') }}" class="feature-card">
+                <div class="feature-icon favorite">
+                    <i class="fas fa-star"></i>
                 </div>
                 <div class="feature-content">
-                    <h3>Demande de prêt</h3>
-                    <p>Demander un équipement en prêt pour votre service</p>
-                    <span class="feature-badge">UC-USR-04</span>
-                </div>
-                <i class="fas fa-arrow-right feature-arrow"></i>
-            </a>
-
-            <!-- Commande consommables -->
-            <a href="" class="feature-card">
-                <div class="feature-icon order">
-                    <i class="fas fa-shopping-cart"></i>
-                </div>
-                <div class="feature-content">
-                    <h3>Commande de consommables</h3>
-                    <p>Commander des fournitures et consommables médicaux</p>
-                    <span class="feature-badge">UC-USR-05</span>
-                </div>
-                <i class="fas fa-arrow-right feature-arrow"></i>
-            </a>
-
-            <!-- Signalement urgence -->
-            <a href="" class="feature-card urgent">
-                <div class="feature-icon emergency">
-                    <i class="fas fa-exclamation-triangle"></i>
-                </div>
-                <div class="feature-content">
-                    <h3>Signalement d'urgence</h3>
-                    <p>Signaler une panne critique nécessitant intervention immédiate</p>
-                    <span class="feature-badge">UC-USR-06</span>
-                </div>
-                <i class="fas fa-arrow-right feature-arrow"></i>
-            </a>
-
-            <!-- Validation interventions -->
-            <a href="" class="feature-card">
-                <div class="feature-icon validation">
-                    <i class="fas fa-clipboard-check"></i>
-                </div>
-                <div class="feature-content">
-                    <h3>Validation interventions</h3>
-                    <p>Valider les interventions terminées par les techniciens</p>
-                    <span class="feature-badge">UC-USR-07</span>
-                </div>
-                <i class="fas fa-arrow-right feature-arrow"></i>
-            </a>
-
-            <!-- Documentation technique -->
-            <a href="" class="feature-card">
-                <div class="feature-icon documentation">
-                    <i class="fas fa-book-medical"></i>
-                </div>
-                <div class="feature-content">
-                    <h3>Documentation technique</h3>
-                    <p>Accéder aux manuels et documentations des équipements</p>
-                    <span class="feature-badge">UC-USR-08</span>
-                </div>
-                <i class="fas fa-arrow-right feature-arrow"></i>
-            </a>
-
-            <!-- Planning maintenance -->
-            <a href="" class="feature-card">
-                <div class="feature-icon planning">
-                    <i class="fas fa-calendar-alt"></i>
-                </div>
-                <div class="feature-content">
-                    <h3>Planning de maintenance</h3>
-                    <p>Consulter le calendrier des maintenances préventives</p>
-                    <span class="feature-badge">UC-USR-09</span>
-                </div>
-                <i class="fas fa-arrow-right feature-arrow"></i>
-            </a>
-
-        <a href="{{ route('user.profile.view') }}" class="feature-card">
-    <div class="feature-icon favorite">
-        <i class="fas fa-star"></i>
-    </div>
-    <div class="feature-content">
-        <h3>Mon profil</h3>
-        <p>Accéder à votre profil</p>
-        <span class="feature-badge">Personnalisé</span>
-    </div>
-    <i class="fas fa-arrow-right feature-arrow"></i>
-</a>
-
-            <!-- Historique des activités -->
-            <a href="" class="feature-card">
-                <div class="feature-icon history">
-                    <i class="fas fa-history"></i>
-                </div>
-                <div class="feature-content">
-                    <h3>Historique des activités</h3>
-                    <p>Consulter l'historique complet de vos interactions</p>
+                    <h3>Mon profil</h3>
+                    <p>Accéder à votre profil</p>
                     <span class="feature-badge">Personnalisé</span>
                 </div>
                 <i class="fas fa-arrow-right feature-arrow"></i>
             </a>
 
-            <!-- Rapport d'activité -->
-            <a href="" class="feature-card">
-                <div class="feature-icon report">
-                    <i class="fas fa-chart-line"></i>
-                </div>
-                <div class="feature-content">
-                    <h3>Rapport d'activité</h3>
-                    <p>Générer des rapports statistiques pour votre service</p>
-                    <span class="feature-badge">Personnalisé</span>
-                </div>
-                <i class="fas fa-arrow-right feature-arrow"></i>
-            </a>
 
-            <!-- Support et assistance -->
-            <a href="" class="feature-card">
-                <div class="feature-icon support">
-                    <i class="fas fa-headset"></i>
-                </div>
-                <div class="feature-content">
-                    <h3>Support technique</h3>
-                    <p>Contacter le support pour assistance supplémentaire</p>
-                    <span class="feature-badge">Personnalisé</span>
-                </div>
-                <i class="fas fa-arrow-right feature-arrow"></i>
-            </a>
+
         </div>
 
         <!-- Section urgences/alertes -->

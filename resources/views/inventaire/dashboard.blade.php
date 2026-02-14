@@ -96,7 +96,7 @@
                                 Valeur totale
                             </div>
                             <div class="h5 mb-0 font-weight-bold text-gray-800">
-                                {{ number_format($statistiques['valeur_totale'], 2, ',', ' ') }} €
+                                {{ number_format($statistiques['valeur_totale'], 2, ',', ' ') }} FCFA
                             </div>
                         </div>
                         <div class="col-auto">
@@ -180,7 +180,7 @@
                                     <td>{{ $equipement->localisation->nom ?? 'Non affecté' }}</td>
                                     <td>{{ $equipement->created_at->format('d/m/Y') }}</td>
                                     <td>
-                                        <a href="{{ route('inventaire.equipements.show', $equipement) }}" 
+                                        <a href="{{ route('inventaire.equipements.show', $equipement) }}"
                                            class="btn btn-sm btn-info">
                                             <i class="fas fa-eye"></i>
                                         </a>

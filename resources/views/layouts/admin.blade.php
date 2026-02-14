@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="fr">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -444,9 +445,17 @@
 
         /* Animation pour les icônes */
         @keyframes pulse {
-            0% { transform: scale(1); }
-            50% { transform: scale(1.05); }
-            100% { transform: scale(1); }
+            0% {
+                transform: scale(1);
+            }
+
+            50% {
+                transform: scale(1.05);
+            }
+
+            100% {
+                transform: scale(1);
+            }
         }
 
         .pulse {
@@ -472,6 +481,7 @@
         }
     </style>
 </head>
+
 <body>
     <!-- Navigation principale -->
     <nav class="navbar navbar-expand-lg navbar-dark">
@@ -484,7 +494,8 @@
             <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav ms-auto">
                     <li class="nav-item dropdown user-dropdown">
-                        <a class="nav-link dropdown-toggle d-flex align-items-center" href="#" role="button" data-bs-toggle="dropdown">
+                        <a class="nav-link dropdown-toggle d-flex align-items-center" href="#" role="button"
+                            data-bs-toggle="dropdown">
                             <div class="user-avatar">
                                 {{ strtoupper(substr(auth()->user()->nom, 0, 1)) }}{{ strtoupper(substr(auth()->user()->prenom, 0, 1)) }}
                             </div>
@@ -509,7 +520,9 @@
                                     </div>
                                 </div>
                             </li>
-                            <li><hr class="dropdown-divider"></li>
+                            <li>
+                                <hr class="dropdown-divider">
+                            </li>
                             <li>
                                 <a class="dropdown-item" href="#">
                                     <i class="fas fa-user-circle"></i> Mon profil
@@ -520,7 +533,9 @@
                                     <i class="fas fa-cog"></i> Paramètres
                                 </a>
                             </li>
-                            <li><hr class="dropdown-divider"></li>
+                            <li>
+                                <hr class="dropdown-divider">
+                            </li>
                             <li>
                                 <form method="POST" action="{{ route('logout') }}">
                                     @csrf
@@ -541,17 +556,17 @@
         <button class="sidebar-toggle" id="sidebarToggle">
             <i class="fas fa-chevron-left"></i>
         </button>
-          <div class="user-profile-badge">
+        <div class="user-profile-badge">
 
-<div class="ms-2">
-    <span class="badge bg-primary p-2 rounded">
-        <i class="fas fa-tachometer-alt text-white"></i>
-    </span>
-</div>
-
-
-
+            <div class="ms-2">
+                <span class="badge bg-primary p-2 rounded">
+                    <i class="fas fa-tachometer-alt text-white"></i>
+                </span>
             </div>
+
+
+
+        </div>
 
         <ul class="nav nav-pills flex-column mb-auto mt-4">
             @php
@@ -562,67 +577,98 @@
             @endphp
 
             <!-- Menu pour les administrateurs -->
-            @if($isAdmin)
-            <li class="nav-item">
-                <a href="{{ route('admin.profils.index') }}"
-                   class="nav-link {{ request()->routeIs('admin.profils.*') ? 'active' : '' }}">
-                    <i class="fas fa-user-tag"></i>
-                    <span class="nav-text">Profils & permissions</span>
-                </a>
-            </li>
+            @if ($isAdmin)
+                <li class="nav-item">
+                    <a href="{{ route('admin.profils.index') }}"
+                        class="nav-link {{ request()->routeIs('admin.profils.*') ? 'active' : '' }}">
+                        <i class="fas fa-user-tag"></i>
+                        <span class="nav-text">Profils & permissions</span>
+                    </a>
+                </li>
 
-            <li class="nav-item">
-                <a href="{{ route('admin.services.index') }}"
-                   class="nav-link {{ request()->routeIs('admin.services.*') ? 'active' : '' }}">
-                    <i class="fas fa-building"></i>
-                    <span class="nav-text">Services & Localisations</span>
-                </a>
-            </li>
+                <li class="nav-item">
+                    <a href="{{ route('admin.services.index') }}"
+                        class="nav-link {{ request()->routeIs('admin.services.*') ? 'active' : '' }}">
+                        <i class="fas fa-building"></i>
+                        <span class="nav-text">Services & Localisations</span>
+                    </a>
+                </li>
 
-            <li class="nav-item">
-                <a href="{{ route('admin.comptes.index') }}"
-                   class="nav-link {{ request()->routeIs('admin.comptes.*') ? 'active' : '' }}">
-                    <i class="fas fa-users"></i>
-                    <span class="nav-text">Gérer les comptes</span>
-                </a>
-            </li>
+                <li class="nav-item">
+                    <a href="{{ route('admin.comptes.index') }}"
+                        class="nav-link {{ request()->routeIs('admin.comptes.*') ? 'active' : '' }}">
+                        <i class="fas fa-users"></i>
+                        <span class="nav-text">Gérer les comptes</span>
+                    </a>
+                </li>
+
+
+                <li class="nav-item nav-dropdown">
+    <a href="#" class="nav-link dropdown-toggle" data-bs-toggle="dropdown" role="button">
+        <i class="fas fa-chart-pie"></i>
+        <span class="nav-text">Monitoring & Logs</span>
+    </a>
+    <ul class="dropdown-menu">
+        <li>
+            <a href="{{ route('admin.logs.dashboard') }}"
+               class="dropdown-item {{ request()->routeIs('admin.logs.dashboard') ? 'active' : '' }}">
+                <i class="fas fa-chart-line me-2"></i>Dashboard Logs
+            </a>
+        </li>
+        <li>
+            <a href="{{ route('admin.logs.fichier') }}"
+               class="dropdown-item {{ request()->routeIs('admin.logs.fichier') ? 'active' : '' }}">
+                <i class="fas fa-file-alt me-2"></i>Fichier Log
+                @if(file_exists(storage_path('logs/laravel.log')) && filesize(storage_path('logs/laravel.log')) > 0)
+                    <span class="badge badge-danger ms-2">!</span>
+                @endif
+            </a>
+        </li>
+        <li>
+            <a href="{{ route('admin.logs.export') }}"
+               class="dropdown-item">
+                <i class="fas fa-download me-2"></i>Exporter Logs
+            </a>
+        </li>
+    </ul>
+</li>
             @endif
 
             <!-- Menu pour les gestionnaires d'inventaire -->
-            @if($isGestionnaireInventaire)
-            <li class="nav-item">
-                <a href="{{ route('inventaire.dashboard') }}"
-                   class="nav-link {{ request()->routeIs('inventaire.*') && !request()->routeIs('inventaire.rapports.*') ? 'active' : '' }}">
-                    <i class="fas fa-boxes"></i>
-                    <span class="nav-text">Inventaire</span>
-                </a>
-            </li>
+            @if ($isGestionnaireInventaire)
+                <li class="nav-item">
+                    <a href="{{ route('inventaire.dashboard') }}"
+                        class="nav-link {{ request()->routeIs('inventaire.*') && !request()->routeIs('inventaire.rapports.*') ? 'active' : '' }}">
+                        <i class="fas fa-boxes"></i>
+                        <span class="nav-text">Inventaire</span>
+                    </a>
+                </li>
 
-            <li class="nav-item">
-                <a href="{{ route('inventaire.equipements.index') }}"
-                   class="nav-link {{ request()->routeIs('inventaire.equipements.*') ? 'active' : '' }}">
-                    <i class="fas fa-tools"></i>
-                    <span class="nav-text">Équipements</span>
-                </a>
-            </li>
+                <li class="nav-item">
+                    <a href="{{ route('inventaire.equipements.index') }}"
+                        class="nav-link {{ request()->routeIs('inventaire.equipements.*') ? 'active' : '' }}">
+                        <i class="fas fa-tools"></i>
+                        <span class="nav-text">Équipements</span>
+                    </a>
+                </li>
 
-            <li class="nav-item">
-                <a href="{{ route('inventaire.types.index') }}"
-                   class="nav-link {{ request()->routeIs('inventaire.types.*') ? 'active' : '' }}">
-                    <i class="fas fa-cogs"></i>
-                    <span class="nav-text">Types d'équipement</span>
-                </a>
-            </li>
+                <li class="nav-item">
+                    <a href="{{ route('inventaire.types.index') }}"
+                        class="nav-link {{ request()->routeIs('inventaire.types.*') ? 'active' : '' }}">
+                        <i class="fas fa-cogs"></i>
+                        <span class="nav-text">Types d'équipement</span>
+                    </a>
+                </li>
 
-            <li class="nav-item">
-                <a href="{{ route('inventaire.fournisseurs.index') }}"
-                   class="nav-link {{ request()->routeIs('inventaire.fournisseurs.*') ? 'active' : '' }}">
-                    <i class="fas fa-truck"></i>
-                    <span class="nav-text">Fournisseurs</span>
-                </a>
-            </li>
+                <li class="nav-item">
+                    <a href="{{ route('inventaire.fournisseurs.index') }}"
+                        class="nav-link {{ request()->routeIs('inventaire.fournisseurs.*') ? 'active' : '' }}">
+                        <i class="fas fa-truck"></i>
+                        <span class="nav-text">Fournisseurs</span>
+                    </a>
+                </li>
 
-                   <li class="nav-item">
+                <li class="nav-item">
                     <a href="{{ route('inventaire.historiques.index') }}"
                         class="nav-link {{ request()->routeIs('inventaire.historiques.*') ? 'active' : '' }}">
                         <i class="fas fa-history"></i>
@@ -633,7 +679,7 @@
                     </a>
                 </li>
 
-        {{--     <li class="nav-item">
+                {{--     <li class="nav-item">
                 <a href="{{ route('inventaire.scanner.index') }}"
                    class="nav-link {{ request()->routeIs('inventaire.scanner.*') ? 'active' : '' }}">
                     <i class="fas fa-barcode"></i>
@@ -651,6 +697,67 @@
             @endif
 
             <!-- Menu pour les magasiniers -->
+
+
+            <!-- Menu pour les techniciens -->
+            @php
+                $isTechnicien = Auth::user()->profil_id == 4; // À ajuster selon votre ID
+            @endphp
+
+            @if ($isTechnicien)
+                <li class="nav-item">
+                    <a href="{{ route('technicien.dashboard') }}"
+                        class="nav-link {{ request()->routeIs('technicien.dashboard') ? 'active' : '' }}">
+                        <i class="fas fa-tachometer-alt"></i>
+                        <span class="nav-text">Dashboard Technique</span>
+                    </a>
+                </li>
+
+                <li class="nav-item">
+                    <a href="{{ route('technicien.demandes.index') }}"
+                        class="nav-link {{ request()->routeIs('technicien.demandes.*') ? 'active' : '' }}">
+                        <i class="fas fa-clipboard-list"></i>
+                        <span class="nav-text">Demandes d'intervention</span>
+                        @php
+                            $demandesEnAttente = \App\Models\DemandeIntervention::whereHas('demandeur', function ($q) {
+                                $q->where('service_id', Auth::user()->service_id);
+                            })
+                                ->whereIn('Statut', ['validee', 'en_attente'])
+                                ->count();
+                        @endphp
+                        @if ($demandesEnAttente > 0)
+                            <span class="badge badge-warning ml-auto">{{ $demandesEnAttente }}</span>
+                        @endif
+                    </a>
+                </li>
+
+                <li class="nav-item">
+                    <a href="{{ route('technicien.interventions.index') }}"
+                        class="nav-link {{ request()->routeIs('technicien.interventions.*') ? 'active' : '' }}">
+                        <i class="fas fa-wrench"></i>
+                        <span class="nav-text">Mes interventions</span>
+                        @php
+                            $interventionsEnCours = \App\Models\Intervention::where('ID_Intervenant', Auth::id())
+                                ->whereNull('Date_Fin')
+                                ->count();
+                        @endphp
+                        @if ($interventionsEnCours > 0)
+                            <span class="badge badge-primary ml-auto">{{ $interventionsEnCours }}</span>
+                        @endif
+                    </a>
+                </li>
+
+                <!-- Dans votre menu technicien -->
+<li class="nav-item">
+    <a href="{{ route('technicien.preventive.equipements') }}"
+       class="nav-link {{ request()->routeIs('technicien.preventive.*') ? 'active' : '' }}">
+        <i class="fas fa-calendar-check"></i>
+        <span class="nav-text">Maintenance préventive</span>
+    </a>
+</li>
+
+
+            @endif
 
 
         </ul>
@@ -682,7 +789,7 @@
             </div>
 
             <!-- Messages flash -->
-            @if(session('success'))
+            @if (session('success'))
                 <div class="alert alert-success alert-dismissible fade show" role="alert">
                     <div class="d-flex align-items-center">
                         <i class="fas fa-check-circle fa-2x me-3"></i>
@@ -695,7 +802,7 @@
                 </div>
             @endif
 
-            @if(session('error'))
+            @if (session('error'))
                 <div class="alert alert-danger alert-dismissible fade show" role="alert">
                     <div class="d-flex align-items-center">
                         <i class="fas fa-exclamation-circle fa-2x me-3"></i>
@@ -708,7 +815,7 @@
                 </div>
             @endif
 
-            @if(session('warning'))
+            @if (session('warning'))
                 <div class="alert alert-warning alert-dismissible fade show" role="alert">
                     <div class="d-flex align-items-center">
                         <i class="fas fa-exclamation-triangle fa-2x me-3"></i>
@@ -721,14 +828,14 @@
                 </div>
             @endif
 
-            @if($errors->any())
+            @if ($errors->any())
                 <div class="alert alert-danger alert-dismissible fade show" role="alert">
                     <div class="d-flex align-items-center">
                         <i class="fas fa-exclamation-triangle fa-2x me-3"></i>
                         <div>
                             <h5 class="alert-heading mb-2">Erreurs de validation :</h5>
                             <ul class="mb-0 ps-3">
-                                @foreach($errors->all() as $error)
+                                @foreach ($errors->all() as $error)
                                     <li>{{ $error }}</li>
                                 @endforeach
                             </ul>
@@ -760,10 +867,12 @@
                 },
                 responsive: true,
                 dom: '<"row"<"col-sm-12 col-md-6"l><"col-sm-12 col-md-6"f>>' +
-                     '<"row"<"col-sm-12"tr>>' +
-                     '<"row"<"col-sm-12 col-md-5"i><"col-sm-12 col-md-7"p>>',
+                    '<"row"<"col-sm-12"tr>>' +
+                    '<"row"<"col-sm-12 col-md-5"i><"col-sm-12 col-md-7"p>>',
                 pageLength: 25,
-                order: [[0, 'desc']],
+                order: [
+                    [0, 'desc']
+                ],
                 scrollY: '400px',
                 scrollCollapse: true,
                 paging: true
@@ -818,7 +927,8 @@
                 e.preventDefault();
                 const button = $(this);
                 const form = button.closest('form');
-                const message = button.data('confirm') || 'Êtes-vous sûr de vouloir effectuer cette action ?';
+                const message = button.data('confirm') ||
+                    'Êtes-vous sûr de vouloir effectuer cette action ?';
                 const buttonText = button.data('button-text') || 'Confirmer';
 
                 Swal.fire({
@@ -891,4 +1001,5 @@
 
     @stack('scripts')
 </body>
+
 </html>

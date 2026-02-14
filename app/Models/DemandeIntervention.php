@@ -5,12 +5,14 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use App\Models\Utilisateur;
 
 class DemandeIntervention extends Model
 {
     use HasFactory, SoftDeletes;
 
     protected $table = 'demandes_intervention';
+
     protected $primaryKey = 'ID_Demande';
 
     protected $fillable = [
@@ -27,14 +29,14 @@ class DemandeIntervention extends Model
         'ID_Validateur',
         'Priorite',
         'Delai_Souhaite',
-        'Commentaires'
+        'Commentaires',
     ];
 
     protected $casts = [
         'Date_Demande' => 'date',
         'Date_Validation' => 'datetime',
         'Delai_Souhaite' => 'integer',
-        'Priorite' => 'integer'
+        'Priorite' => 'integer',
     ];
 
     /**
@@ -60,10 +62,10 @@ class DemandeIntervention extends Model
     /**
      * Relation avec le demandeur
      */
-    public function demandeur()
-    {
-        return $this->belongsTo(User::class, 'ID_Demandeur');
-    }
+public function demandeur()
+{
+    return $this->belongsTo(Utilisateur::class, 'ID_Demandeur');
+}
 
     /**
      * Relation avec l'équipement
@@ -156,7 +158,7 @@ class DemandeIntervention extends Model
             'validee' => 'Validée',
             'rejetee' => 'Rejetée',
             'terminee' => 'Terminée',
-            'annulee' => 'Annulée'
+            'annulee' => 'Annulée',
         ];
 
         return $etats[$this->Statut] ?? $this->Statut;
@@ -173,7 +175,7 @@ class DemandeIntervention extends Model
             'validee' => 'success',
             'rejetee' => 'danger',
             'terminee' => 'primary',
-            'annulee' => 'secondary'
+            'annulee' => 'secondary',
         ];
 
         return $badges[$this->Statut] ?? 'secondary';
@@ -187,7 +189,7 @@ class DemandeIntervention extends Model
         $urgences = [
             'normale' => 'Normale',
             'urgente' => 'Urgente',
-            'critique' => 'Critique'
+            'critique' => 'Critique',
         ];
 
         return $urgences[$this->Urgence] ?? $this->Urgence;
@@ -201,7 +203,7 @@ class DemandeIntervention extends Model
         $badges = [
             'normale' => 'success',
             'urgente' => 'warning',
-            'critique' => 'danger'
+            'critique' => 'danger',
         ];
 
         return $badges[$this->Urgence] ?? 'secondary';
@@ -219,7 +221,7 @@ class DemandeIntervention extends Model
             'calibration' => 'Calibration',
             'verification' => 'Vérification',
             'controle' => 'Contrôle',
-            'autre' => 'Autre'
+            'autre' => 'Autre',
         ];
 
         return $types[$this->Type_Intervention] ?? $this->Type_Intervention;
@@ -271,5 +273,14 @@ class DemandeIntervention extends Model
     public function scopeTerminees($query)
     {
         return $query->where('Statut', 'terminee');
+    }
+
+    public function interventions()
+    {
+        return $this->hasMany(
+            Intervention::class,
+            'ID_Demande',      // clé étrangère dans intervention
+            'ID_Demande'       // clé primaire locale
+        );
     }
 }

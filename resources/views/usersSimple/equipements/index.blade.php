@@ -1,7 +1,7 @@
 @extends('layouts.welcome')
 
 @section('content')
-<div class="container-fluid py-4">
+<div class="container-fluid py-4" style="width: 80%;">
 
     <!-- En-tête -->
     <div class="row mb-4">
@@ -310,7 +310,7 @@
                                        title="Voir détails">
                                         <i class="fas fa-eye"></i>
                                     </a>
-                              
+
                                 </div>
                             </td>
                         </tr>

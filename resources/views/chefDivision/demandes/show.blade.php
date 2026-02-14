@@ -162,7 +162,10 @@
                                 </div>
                                 <div>
                                     <label class="info-label">Nom complet</label>
-                                    <p class="info-value">{{ $demande->demandeur->nom_complet }}</p>
+                                   <p class="info-value">
+    {{ $demande->demandeur->nom }} {{ $demande->demandeur->prenom }}
+</p>
+
                                 </div>
                             </div>
                         </div>
@@ -184,7 +187,11 @@
                                 </div>
                                 <div>
                                     <label class="info-label">Service</label>
-                                    <p class="info-value">{{ $demande->demandeur->service->nom ?? 'Non spécifié' }}</p>
+                                   <p class="info-value">
+    {{ optional($demande->demandeur->service)->nom ?? 'Non spécifié' }}
+</p>
+
+
                                 </div>
                             </div>
                         </div>
