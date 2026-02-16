@@ -1,8 +1,8 @@
 <?php
 
+use App\Http\Controllers\Admin\AdminLogController;
 use App\Http\Controllers\Admin\CompteController;
 use App\Http\Controllers\Admin\ProfilController;
-use App\Http\Controllers\Admin\AdminLogController;
 use App\Http\Controllers\Admin\ServiceController;
 use App\Http\Controllers\Auth\AuthenticatedSessionController;
 use App\Http\Controllers\Auth\EmailVerificationNotificationController;
@@ -45,6 +45,60 @@ Route::middleware('guest')->group(function () {
 
     Route::get('reset-password/{token}', [NewPasswordController::class, 'create'])->name('password.reset');
     Route::post('reset-password', [NewPasswordController::class, 'store'])->name('password.store');
+});
+
+
+//Gestions des
+
+Route::prefix('admin')->name('admin.')->middleware(['auth'])->group(function () {
+
+    // Gestion des contrats de maintenance
+    Route::prefix('contrats')->name('contrats.')->group(function () {
+
+        // Routes principales
+        Route::get('/', [App\Http\Controllers\Admin\ContratMaintenanceController::class, 'index'])
+            ->name('index');
+
+        Route::get('/create', [App\Http\Controllers\Admin\ContratMaintenanceController::class, 'create'])
+            ->name('create');
+
+        Route::post('/', [App\Http\Controllers\Admin\ContratMaintenanceController::class, 'store'])
+            ->name('store');
+
+        Route::get('/{id}', [App\Http\Controllers\Admin\ContratMaintenanceController::class, 'show'])
+            ->name('show');
+
+        Route::get('/{id}/edit', [App\Http\Controllers\Admin\ContratMaintenanceController::class, 'edit'])
+            ->name('edit');
+
+        Route::put('/{id}', [App\Http\Controllers\Admin\ContratMaintenanceController::class, 'update'])
+            ->name('update');
+
+        Route::delete('/{id}', [App\Http\Controllers\Admin\ContratMaintenanceController::class, 'destroy'])
+            ->name('destroy');
+
+        // Actions spéciales
+        Route::post('/{id}/changer-statut', [App\Http\Controllers\Admin\ContratMaintenanceController::class, 'changerStatut'])
+            ->name('changer-statut');
+
+        // Export et rapports
+        Route::get('/export/zip', [App\Http\Controllers\Admin\ContratMaintenanceController::class, 'exportZip'])
+            ->name('export.zip');
+
+        Route::post('/rapport/pdf', [App\Http\Controllers\Admin\ContratMaintenanceController::class, 'generateRapport'])
+            ->name('rapport.pdf');
+
+        Route::get('/{id}/pdf', [App\Http\Controllers\Admin\ContratMaintenanceController::class, 'generatePdf'])
+            ->name('pdf');
+
+        // API pour les charts
+        Route::get('/chart-data', [App\Http\Controllers\Admin\ContratMaintenanceController::class, 'chartData'])
+            ->name('chart-data');
+
+        // Alertes
+        Route::post('/send-alerts', [App\Http\Controllers\Admin\ContratMaintenanceController::class, 'sendExpirationAlerts'])
+            ->name('send-alerts');
+    });
 });
 
 Route::middleware('auth')->group(function () {
@@ -105,23 +159,20 @@ Route::middleware('auth')->group(function () {
             Route::put('/{service}/utilisateurs/{utilisateur}', [ServiceController::class, 'updateAffectation'])->name('update-affectation');
         });
 
+        // NOUVELLES ROUTES POUR LES LOGS
+        Route::prefix('logs')->name('logs.')->group(function () {
+            Route::get('/', [AdminLogController::class, 'index'])
+                ->name('dashboard');
 
+            Route::get('/export', [AdminLogController::class, 'export'])
+                ->name('export');
 
+            Route::get('/fichier', [AdminLogController::class, 'viewLogFile'])
+                ->name('fichier');
 
-            // NOUVELLES ROUTES POUR LES LOGS
-    Route::prefix('logs')->name('logs.')->group(function () {
-        Route::get('/', [AdminLogController::class, 'index'])
-            ->name('dashboard');
-
-        Route::get('/export', [AdminLogController::class, 'export'])
-            ->name('export');
-
-        Route::get('/fichier', [AdminLogController::class, 'viewLogFile'])
-            ->name('fichier');
-
-        Route::post('/clear', [AdminLogController::class, 'clearLogs'])
-            ->name('clear');
-    });
+            Route::post('/clear', [AdminLogController::class, 'clearLogs'])
+                ->name('clear');
+        });
 
     });
 

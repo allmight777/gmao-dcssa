@@ -5,6 +5,34 @@
 @section('page-title', 'Gestion des types d\'équipement')
 
 @section('page-actions')
+<style>
+    .btn-return {
+        display: inline-flex;
+        align-items: center;
+        padding: 8px 14px;
+        background-color: #1d4ed8; /* bleu */
+        color: white;
+        border-radius: 6px;
+        text-decoration: none;
+        font-weight: 500;
+        transition: background-color 0.2s, transform 0.1s;
+    }
+
+    .btn-return i {
+        margin-right: 6px;
+    }
+
+    .btn-return:hover {
+        background-color: #2563eb;
+        transform: translateY(-1px);
+    }
+
+    /* Optionnel : ajouter un petit shadow pour faire flotter le bouton */
+    .btn-return:active {
+        transform: translateY(0);
+    }
+</style>
+
 <a href="{{ route('inventaire.types.create') }}" class="btn-return">
     <i class="fas fa-plus"></i> Nouveau type
 </a>
@@ -180,13 +208,13 @@
                             </td>
                             <td>
                                 <div class="action-buttons">
-                                    <a href="{{ route('inventaire.types.edit', $type->id) }}" 
-                                       class="btn-action btn-edit" 
+                                    <a href="{{ route('inventaire.types.edit', $type->id) }}"
+                                       class="btn-action btn-edit"
                                        title="Modifier">
                                         <i class="fas fa-edit"></i>
                                     </a>
-                                    <form action="{{ route('inventaire.types.destroy', $type->id) }}" 
-                                          method="POST" 
+                                    <form action="{{ route('inventaire.types.destroy', $type->id) }}"
+                                          method="POST"
                                           class="delete-form"
                                           data-name="{{ $type->libelle }}">
                                         @csrf
@@ -737,7 +765,7 @@
     document.addEventListener('DOMContentLoaded', function() {
         // Initialiser le graphique
         const ctx = document.getElementById('riskChart').getContext('2d');
-        
+
         const riskChart = new Chart(ctx, {
             type: 'doughnut',
             data: {
@@ -806,7 +834,7 @@
             searchInput.addEventListener('keyup', function() {
                 const searchTerm = this.value.toLowerCase();
                 const rows = document.querySelectorAll('.data-table tbody tr');
-                
+
                 rows.forEach(row => {
                     const text = row.textContent.toLowerCase();
                     row.style.display = text.includes(searchTerm) ? '' : 'none';
@@ -820,7 +848,7 @@
                 e.preventDefault();
                 const form = this.closest('.delete-form');
                 const typeName = form.dataset.name;
-                
+
                 Swal.fire({
                     title: 'Confirmer la suppression',
                     html: `Êtes-vous sûr de vouloir supprimer le type <strong>"${typeName}"</strong> ?`,
@@ -845,7 +873,7 @@
             card.style.animationDelay = `${index * 0.1}s`;
             card.style.opacity = '0';
             card.style.transform = 'translateY(20px)';
-            
+
             setTimeout(() => {
                 card.style.transition = 'opacity 0.5s ease, transform 0.5s ease';
                 card.style.opacity = '1';

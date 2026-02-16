@@ -35,7 +35,7 @@
         }
     </style>
 <a href="{{ route('inventaire.historiques.export', request()->all()) }}"
-   class="btn btn-primary">
+   class="btn btn-success">
     <i class="fas fa-file-excel"></i> Exporter CSV
 </a>
 
@@ -113,7 +113,7 @@
                         <i class="fas fa-filter"></i> Filtrer
                     </button>
                     <a href="{{ route('inventaire.historiques.index') }}" class="btn-reset">
-                        <i class="fas fa-redo"></i> Réinitialiser
+                        <i class="fas fa-redo"></i> 
                     </a>
                 </div>
             </div>

@@ -26,10 +26,9 @@ return new class extends Migration
             $table->foreignId('localisation_id')->nullable()->constrained('localisations')->nullOnDelete();
             $table->foreignId('service_responsable_id')->nullable()->constrained('localisations')->nullOnDelete();
             $table->foreignId('fournisseur_id')->nullable()->constrained('fournisseurs')->nullOnDelete();
-            
-            // Rendons cette contrainte nullable pour l'instant
-            $table->foreignId('contrat_id')->nullable()->constrained('contrats_maintenance')->nullOnDelete();
-            
+
+            $table->unsignedBigInteger('contrat_id')->nullable();
+
             $table->text('commentaires')->nullable();
             $table->date('date_reforme')->nullable();
             $table->string('code_barres')->nullable()->unique();

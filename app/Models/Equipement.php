@@ -152,4 +152,10 @@ public function type_equipement()
     return $this->typeEquipement();
 }
 
+public function type()
+{
+    return $this->belongsTo(TypeEquipement::class, 'type_equipement_id');
+}
+
+
 }

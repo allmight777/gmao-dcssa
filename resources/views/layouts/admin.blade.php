@@ -528,11 +528,7 @@
                                     <i class="fas fa-user-circle"></i> Mon profil
                                 </a>
                             </li>
-                            <li>
-                                <a class="dropdown-item" href="#">
-                                    <i class="fas fa-cog"></i> Paramètres
-                                </a>
-                            </li>
+                      
                             <li>
                                 <hr class="dropdown-divider">
                             </li>
@@ -563,8 +559,6 @@
                     <i class="fas fa-tachometer-alt text-white"></i>
                 </span>
             </div>
-
-
 
         </div>
 
@@ -604,34 +598,33 @@
 
 
                 <li class="nav-item nav-dropdown">
-    <a href="#" class="nav-link dropdown-toggle" data-bs-toggle="dropdown" role="button">
-        <i class="fas fa-chart-pie"></i>
-        <span class="nav-text">Monitoring & Logs</span>
-    </a>
-    <ul class="dropdown-menu">
-        <li>
-            <a href="{{ route('admin.logs.dashboard') }}"
-               class="dropdown-item {{ request()->routeIs('admin.logs.dashboard') ? 'active' : '' }}">
-                <i class="fas fa-chart-line me-2"></i>Dashboard Logs
-            </a>
-        </li>
-        <li>
-            <a href="{{ route('admin.logs.fichier') }}"
-               class="dropdown-item {{ request()->routeIs('admin.logs.fichier') ? 'active' : '' }}">
-                <i class="fas fa-file-alt me-2"></i>Fichier Log
-                @if(file_exists(storage_path('logs/laravel.log')) && filesize(storage_path('logs/laravel.log')) > 0)
-                    <span class="badge badge-danger ms-2">!</span>
-                @endif
-            </a>
-        </li>
-        <li>
-            <a href="{{ route('admin.logs.export') }}"
-               class="dropdown-item">
-                <i class="fas fa-download me-2"></i>Exporter Logs
-            </a>
-        </li>
-    </ul>
-</li>
+                    <a href="#" class="nav-link dropdown-toggle" data-bs-toggle="dropdown" role="button">
+                        <i class="fas fa-chart-pie"></i>
+                        <span class="nav-text">Monitoring & Logs</span>
+                    </a>
+                    <ul class="dropdown-menu">
+                        <li>
+                            <a href="{{ route('admin.logs.dashboard') }}"
+                                class="dropdown-item {{ request()->routeIs('admin.logs.dashboard') ? 'active' : '' }}">
+                                <i class="fas fa-chart-line me-2"></i>Dashboard Logs
+                            </a>
+                        </li>
+                        <li>
+                            <a href="{{ route('admin.logs.fichier') }}"
+                                class="dropdown-item {{ request()->routeIs('admin.logs.fichier') ? 'active' : '' }}">
+                                <i class="fas fa-file-alt me-2"></i>Fichier Log
+                                @if (file_exists(storage_path('logs/laravel.log')) && filesize(storage_path('logs/laravel.log')) > 0)
+                                    <span class="badge badge-danger ms-2">!</span>
+                                @endif
+                            </a>
+                        </li>
+                        <li>
+                            <a href="{{ route('admin.logs.export') }}" class="dropdown-item">
+                                <i class="fas fa-download me-2"></i>Exporter Logs
+                            </a>
+                        </li>
+                    </ul>
+                </li>
             @endif
 
             <!-- Menu pour les gestionnaires d'inventaire -->
@@ -669,6 +662,20 @@
                 </li>
 
                 <li class="nav-item">
+                    <a href="{{ route('admin.contrats.index') }}"
+                        class="nav-link {{ request()->routeIs('admin.contrats.*') ? 'active' : '' }}">
+                        <i class="fas fa-file-contract"></i>
+                        <span class="nav-text">Contrats Maintenance</span>
+                        @php
+                            $contratsExpirants = \App\Models\ContratMaintenance::expirant(7)->count();
+                        @endphp
+                        @if ($contratsExpirants > 0)
+                            <span class="badge badge-danger badge-pill ml-auto">{{ $contratsExpirants }}</span>
+                        @endif
+                    </a>
+                </li>
+
+                <li class="nav-item">
                     <a href="{{ route('inventaire.historiques.index') }}"
                         class="nav-link {{ request()->routeIs('inventaire.historiques.*') ? 'active' : '' }}">
                         <i class="fas fa-history"></i>
@@ -679,21 +686,6 @@
                     </a>
                 </li>
 
-                {{--     <li class="nav-item">
-                <a href="{{ route('inventaire.scanner.index') }}"
-                   class="nav-link {{ request()->routeIs('inventaire.scanner.*') ? 'active' : '' }}">
-                    <i class="fas fa-barcode"></i>
-                    <span class="nav-text">Scanner</span>
-                </a>
-            </li>
-
-            <li class="nav-item">
-                <a href="{{ route('inventaire.rapports.index') }}"
-                   class="nav-link {{ request()->routeIs('inventaire.rapports.*') ? 'active' : '' }}">
-                    <i class="fas fa-chart-bar"></i>
-                    <span class="nav-text">Rapports</span>
-                </a>
-            </li>  --}}
             @endif
 
             <!-- Menu pour les magasiniers -->
@@ -701,7 +693,7 @@
 
             <!-- Menu pour les techniciens -->
             @php
-                $isTechnicien = Auth::user()->profil_id == 4; // À ajuster selon votre ID
+                $isTechnicien = Auth::user()->profil_id == 4;
             @endphp
 
             @if ($isTechnicien)
@@ -748,13 +740,13 @@
                 </li>
 
                 <!-- Dans votre menu technicien -->
-<li class="nav-item">
-    <a href="{{ route('technicien.preventive.equipements') }}"
-       class="nav-link {{ request()->routeIs('technicien.preventive.*') ? 'active' : '' }}">
-        <i class="fas fa-calendar-check"></i>
-        <span class="nav-text">Maintenance préventive</span>
-    </a>
-</li>
+                <li class="nav-item">
+                    <a href="{{ route('technicien.preventive.equipements') }}"
+                        class="nav-link {{ request()->routeIs('technicien.preventive.*') ? 'active' : '' }}">
+                        <i class="fas fa-calendar-check"></i>
+                        <span class="nav-text">Maintenance préventive</span>
+                    </a>
+                </li>
 
 
             @endif

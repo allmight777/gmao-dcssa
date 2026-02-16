@@ -99,51 +99,17 @@
                                 {{ number_format($statistiques['valeur_totale'], 2, ',', ' ') }} FCFA
                             </div>
                         </div>
-                        <div class="col-auto">
-                            <i class="fas fa-euro-sign fa-2x text-gray-300"></i>
-                        </div>
+                     <div class="col-auto">
+    <i class="fas fa-money-bill-wave fa-2x text-gray-300"></i>
+</div>
+
                     </div>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Actions rapides -->
-    <div class="row mb-4">
-        <div class="col-12">
-            <div class="card">
-                <div class="card-header">
-                    <h6 class="card-title mb-0">
-                        <i class="fas fa-bolt"></i> Actions rapides
-                    </h6>
-                </div>
-                <div class="card-body">
-                    <div class="row">
-                        <div class="col-md-3 mb-3">
-                            <a href="{{ route('inventaire.equipements.create') }}" class="btn btn-primary w-100">
-                                <i class="fas fa-plus"></i> Nouvel équipement
-                            </a>
-                        </div>
-                        <div class="col-md-3 mb-3">
-                            <a href="{{ route('inventaire.scanner.index') }}" class="btn btn-success w-100">
-                                <i class="fas fa-barcode"></i> Scanner
-                            </a>
-                        </div>
-                        <div class="col-md-3 mb-3">
-                            <a href="{{ route('inventaire.rapports.inventaire-physique') }}" class="btn btn-info w-100">
-                                <i class="fas fa-clipboard-check"></i> Inventaire physique
-                            </a>
-                        </div>
-                        <div class="col-md-3 mb-3">
-                            <a href="{{ route('inventaire.rapports.generer') }}" class="btn btn-warning w-100">
-                                <i class="fas fa-file-pdf"></i> Générer rapport
-                            </a>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
+
 
     <!-- Équipements récents -->
     <div class="row">
